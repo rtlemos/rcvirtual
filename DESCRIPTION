@@ -1,0 +1,34 @@
+Package: rcvirtual
+Type: Package
+Title: Virtual references classes for statistical modeling
+Version: 0.0.0.9000
+Date: 2015-10-01
+Authors@R: person("Ricardo", "T. Lemos",
+           email = "rtl00@yahoo.com",
+           role = c("aut", "cre"))
+Description: This package contains a set of reference classes for statistical
+  modelling with R. These classes are called "virtual", in the sense that
+  they are designed to set the wireframe for other, "concrete" classes, that
+  implement a specific statistical model.
+License: MIT + file LICENSE
+LazyData: true
+Depends:
+    R (>= 3.1.1)
+Imports:
+    rcrandom,
+    methods
+Collate:
+    basic.R
+    plotter.R
+    parameters.R
+    daemon.R
+    strategy.R
+    factory.R
+    random.R
+    rcvirtual.R
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder:
+    knitr
