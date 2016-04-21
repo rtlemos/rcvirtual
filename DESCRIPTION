@@ -7,16 +7,12 @@ Authors@R: person("Ricardo", "T. Lemos",
            email = "rtl00@yahoo.com",
            role = c("aut", "cre"))
 Description: This package contains a set of reference classes for statistical
-  modelling with R. These classes are called "virtual", in the sense that
-  they are designed to set the wireframe for other, "concrete" classes, that
-  implement a specific statistical model.
-License: MIT + file LICENSE
+    modelling with R. These classes are called "virtual", in the sense that
+    they are designed to set the wireframe for other, "concrete" classes, that
+    implement a specific statistical model. After installing,
+    type the following to get started: > vignette('rcvirtual-vignette', package = 'rcvirtual')
+License: APACHE 2.0
 LazyData: true
-Depends:
-    R (>= 3.1.1)
-Imports:
-    rcrandom,
-    methods
 Collate:
     basic.R
     plotter.R
@@ -30,5 +26,5 @@ Suggests:
     testthat,
     knitr,
     rmarkdown
-VignetteBuilder:
-    knitr
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1

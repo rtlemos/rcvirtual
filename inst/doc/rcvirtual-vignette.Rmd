@@ -1,5 +1,5 @@
 ---
-title: "rcabstract: a wireframe for statistical model building with R 
+title: "rcvirtual: a wireframe for statistical model building with R 
     reference classes"
 author: "Ricardo T. Lemos"
 date: "`r Sys.Date()`"
@@ -10,55 +10,40 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## TODO
+## Purpose
 
-Flesh out what this package is for.
+In my experience, statistical model code always consists of pretty much the same:
 
-## Default code provided by devtools
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+- objects that hold observations, constants, etc.
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+- functions that define the model
 
-## Vignette Info
+- functions that plot results
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+With this package, I am attempting to establish a few patterns in my code, 
+so that it becomes easier to read, debug, and modify. I have created the following
+virtual reference classes:
 
-## Styles
+- The Daemon class. Also known as the Puppeteer, this is the class that controls all others.
+Ideally, lay users of this package should only have to learn how to interact with objects
+of this class.
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+- The Strategy class. This is the class that defines the strategy to fit a particular statistical
+model. Strategy objects should mostly contain methods (i.e., functions), not data (i.e., fields). 
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+- The Parameters class. This is the class that holds and controls data sets and model parameters.
+Objects of this class should be accessed through Daemon and Strategy objects. The class contains
+methods that set and get data. Data modification methods should be placed in Strategy classes.
 
-## Figures
+- The Factory class. Sometimes, it is necessary to pre-process data before the model can be run.
+This task is performed once, by a Factory object, controlled by the Daemon.
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
+- The Printer class. To visualize model input and output, the Daemon controls an object of the
+Printer class.
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
+- The Random class. Some Parameters may be random variables or vectors, meaning that an efficient,
+parallelizable pseudo-random number generator is needed. 
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+- The Basic class. If there are fields or methods that all classes should have, they ought to be
+placed here. This is the archetypal class, meaning that all others inherit from this one.
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))

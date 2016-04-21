@@ -31,7 +31,6 @@ setRefClass(
 
             if (.self$verbose) print("Validating strategy...")
 
-            #TODO
         },
 
         set.model.fitted = function(status){
