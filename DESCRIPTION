@@ -14,14 +14,17 @@ Description: This package contains a set of reference classes for statistical
 License: APACHE 2.0
 LazyData: true
 Collate:
-    basic.R
-    plotter.R
-    parameters.R
-    daemon.R
-    strategy.R
-    factory.R
-    random.R
-    rcvirtual.R
+    v-basic.R
+    v-conf.R
+    v-plotter.R
+    v-ggplotter.R
+    v-netcdf.R
+    v-parameters.R
+    v-strategy.R
+    v-factory.R
+    v-random.R
+    v-daemon.R
+    v-package.R
 Suggests:
     testthat,
     knitr,
