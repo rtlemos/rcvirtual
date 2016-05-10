@@ -70,8 +70,7 @@ upper/lower bounds}
 
 \item{\code{get.value(param.name = NULL, long.name = NULL)}}{Rapid access to parameter value}
 
-\item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL,
-  touch = FALSE)}}{Should a derived quantity be recomputed?}
+\item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL)}}{Should a derived quantity be recomputed?}
 
 \item{\code{is.valid(obj)}}{Function that checks if parameters are valid.}
 
@@ -85,7 +84,7 @@ this object}
 
 \item{\code{set.lon.bounds(lon.bounds)}}{Sets the min/max latitude of data used in model}
 
-\item{\code{set.read.data(touch = FALSE)}}{Reads data from files}
+\item{\code{set.read.data()}}{Reads data from files}
 
 \item{\code{set.time()}}{Function that stores time information into
      rcvirtual.parameters object: 

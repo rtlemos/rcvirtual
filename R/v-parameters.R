@@ -230,14 +230,12 @@ setRefClass(
     set.data = function(param.name = NULL,
                         field.name = NULL,
                         objs = NULL,
-                        update.timestamp = TRUE,
-                        touch = FALSE){
+                        update.timestamp = TRUE){
       # param.name = name of parameter (alpha, A, etc)
       # field.name = name of parameter's property
       # (prior mean, lbound, etc)
       # objs = list of objs to be stored
 
-      if (touch) return()
       idx1 <- .self$get.id(param.name = param.name)
       if (!.self$is.valid.parameter(param.name) |
           !.self$is.valid.field(field.name)) {
@@ -264,10 +262,9 @@ setRefClass(
       .self$value[[id]] <- objs
     },
 
-    set.read.data = function(touch = FALSE){
+    set.read.data = function(){
       "Reads data from files"
 
-      if (touch) return()
       mytest <- function(x, ext){
         sz.ext <- nchar(ext)
         x.ext <- substr(x, nchar(x) - sz.ext + 1, nchar(x))
@@ -307,15 +304,12 @@ setRefClass(
       }
     },
 
-    set.write.data = function(param.name = NA,
-                              field.name = NA,
-                              id = NA, extension = NA,
-                              touch = FALSE){
-      if (touch) return()
+    set.write.data = function(param.name = NA, field.name = NA,
+                              id = NA, extension = NA){
 
       dt <- .self$get.data(param.name = param.name,
                            field.name = field.name,
-                           id = id, touch = touch)
+                           id = id)
 
       ###########################
       # Writing NetCDF file #####
@@ -836,33 +830,28 @@ setRefClass(
       return(test)
     },
 
-    is.redundant.calculation = function(
-      param.name = NA, parent.names = NULL, touch = FALSE){
+    is.redundant.calculation = function(param.name = NA, parent.names = NULL){
       "Should a derived quantity be recomputed?"
 
-      if (touch) return()
-      my.count <- unlist(.self$get.data(
-        param.name = param.name, field.name = "count"))[1]
-      if (length(parent.names) > 0) {
-        parent.count <- unlist(
-          lapply(parent.names, FUN = .self$get.data,
-                 field.name = "count"))
+      my.timestamp <- .self$get.data(param.name = param.name,
+                                     field.name = 'timestamp')
+      if (is.na(my.timestamp)) return(FALSE) #don't skip: not computed yet
+      if (length(parent.names) == 0) return(TRUE) #skip: no dependencies
+      parent.timestamps <- mapply(parent.names, FUN = function(nm) {
+        .self$get.data(param.name = nm, field.name = 'timestamp')
+      })
+      if (any(is.na(parent.timestrenamps))) {
+        print(paste0('Problem computing ', param.name))
+        print('NA timestamp(s); parent(s) should be computed first.')
+        print(paste0('Parents: ', parent.names))
+        print(paste0('Timestamps: ', parent.timestamps))
+        return(TRUE)
       }
-      if (my.count == -1) {
-        ans <- FALSE #calculating for the first time
-      } else if (length(parent.names) == 0) {
-        #no parents; calculation should only be done once
-        ans <- (my.count > -1)
-      } else if (any(parent.count > my.count)) {
-        #not a redundant calculation:
-        # the value of at least one parent changed
-        ans <- FALSE
+      if (any(parent.timestamps > my.timestamp)) {
+        return(FALSE) #don't skip: updated parent
       } else {
-        #the calculation is redundant:
-        # all parents have the same values as before
-        ans <- TRUE
+        return(TRUE) #skip: more recent than parent(s)
       }
-      return(ans)
     }
-        )
   )
+)

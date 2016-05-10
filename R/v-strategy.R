@@ -305,13 +305,11 @@ setRefClass(
       return(.self$model.fitted)
     },
 
-    is.skippable = function(force.skip, param.name,
-                            parent.names){
-      red <- .self$parameters$is.redundant.calculation(
-        param.name = param.name,
-        parent.names = parent.names)
-      out <- force.skip | red
-      return(out)
+    is.skippable = function(force.skip, param.name, parent.names){
+      if (force.skip) return(TRUE)
+      redundant <- .self$parameters$is.redundant.calculation(
+        param.name = param.name, parent.names = parent.names)
+      return(redundant)
     },
 
     # ------------------------------------------------------
