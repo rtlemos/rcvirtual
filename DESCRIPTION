@@ -16,15 +16,20 @@ LazyData: true
 Collate:
     v-basic.R
     v-conf.R
-    v-plotter.R
-    v-ggplotter.R
     v-netcdf.R
     v-parameters.R
+    v-plotter.R
+    v-ggplotter.R
     v-strategy.R
     v-factory.R
     v-random.R
     v-daemon.R
     v-package.R
+Imports:
+    rcrandom,
+    ncdf4,
+    grid,
+    ggplot2
 Suggests:
     testthat,
     knitr,

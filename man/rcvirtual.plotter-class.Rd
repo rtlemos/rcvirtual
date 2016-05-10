@@ -5,7 +5,7 @@
 \alias{rcvirtual.plotter-class}
 \title{Graphics controller (plotter) of statistical models}
 \description{
-This is a virtual Reference Class for concrete plotter RCs
+This is a virtual Reference Class for plotter RCs
 }
 \details{
 This RC contains fields (a.k.a. "attributes") and methods
@@ -14,11 +14,29 @@ This RC contains fields (a.k.a. "attributes") and methods
 \section{Methods}{
 
 \describe{
+\item{\code{construct.layer(type = NULL, df = NULL, pch = NULL, cex = NULL,
+  xlim = NULL, ylim = NULL, zlim = NULL)}}{Generates a layer (list) for plotting, based on a
+data frame and additional specs}
+
 \item{\code{construct()}}{Construct basic objects}
 
 \item{\code{get.buffer.plot()}}{Prints the plots in the buffer}
 
-\item{\code{set.buffer.size(nr, nc)}}{Sets up plotter's buffer size (number of rows and columns)}
+\item{\code{get.detail.plot(input = NULL)}}{TODO: add descriptor}
+
+\item{\code{get.domain.plot()}}{Plots the region of interest}
+
+\item{\code{get.layer(mydata, myspecs)}}{Converts a chunk of data into a list for plotting}
+
+\item{\code{get.plot.surface(specs, xpos = 1, ypos = 1)}}{Plots data, e.g.
+specs <- list(main.data = 'elevation', do.grid = TRUE,
+under.data = 'elevation')}
+
+\item{\code{get.state.layer(specs)}}{Uses state_coords.RData, loaded with package, to plot
+USA states according to the specs provided}
+
+\item{\code{set.buffer.size(nr, nc)}}{Sets up plotter's buffer size
+(number of rows and columns)}
 
 \item{\code{set.in.buffer(myplot, xpos, ypos)}}{Places a plot in the buffer}
 

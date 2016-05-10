@@ -5,21 +5,65 @@
 \alias{rcvirtual.strategy-class}
 \title{Statistical model-fitting algorithms (strategy)}
 \description{
-This is a virtual Reference Class for concrete strategy RCs
+This is a virtual Reference Class for strategy RCs
 }
 \details{
 This RC contains fields (a.k.a. "attributes") and methods
 (a.k.a. "procedures") for that any strategy RC must have.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{parameters}}{rcvirtual.parameters. Parameters used by strategy.}
+
+\item{\code{datasets}}{rcvirtual.datasets. Input data sets}
+
+\item{\code{fit.counter}}{numeric. Iteration counter}
+
+\item{\code{model.res}}{list. Model fitting output}
+
+\item{\code{model.fitted}}{logical. Has the model been fitted?}
+}}
 \section{Methods}{
 
 \describe{
 \item{\code{construct()}}{Construct basic objects}
 
+\item{\code{get.imputation(Yall, f, Q, u)}}{Impute missing values from obs & forecasts.
+Yall: vector with some NAs (missing values);
+f: vector of predictive means;
+Q: matrix of predictive covariance;
+u: vector of Gaussian variates;
+output: list with indices of NAs and imputed values}
+
+\item{\code{get.log.likelihood(summarized = TRUE)}}{Returns the log likelihood for a parameter vector}
+
+\item{\code{get.value(param.name)}}{Shortcut function to retrieve a parameter value}
+
 \item{\code{is.model.fitted()}}{Check if the model has been fitted}
 
-\item{\code{set.model.fitted(status)}}{Change the status of the model (fitted vs. not fitted)}
+\item{\code{is.valid()}}{Function that checks if strategy is valid.}
 
-\item{\code{validate()}}{Validate basic objects}
+\item{\code{set.advance.counter()}}{Advances the strategy's model fitting counter}
+
+\item{\code{set.log.likelihood()}}{Runs the forward filter and sets the likelihood}
+
+\item{\code{set.optimize(mle = TRUE)}}{Compute maximum likelihood estimates (MLE) or
+maximum a posteriori estimates (MAP) of unknown model
+parameters}
+
+\item{\code{set.value(param.name, objs, update.timestamp = TRUE)}}{Store an object as a parameter}
+
+\item{\code{test.log.likelihood(unk.parvals, unk.parameters, advance.counter = FALSE,
+  summarized = TRUE)}}{Sets the log-likelihood based on
+the provided + current set of parameter values}
+
+\item{\code{test.log.posterior.density(unk.parvals, unk.parameters,
+  advance.counter = FALSE, summarized = TRUE)}}{Computes the log-posterior density associated with
+a vector of input parameters}
+
+\item{\code{test.log.prior.density(unk.parvals, unk.parameters, advance.counter = FALSE,
+  summarized = TRUE)}}{Computes the log-prior density for a vector of
+input parameters}
 }}
 

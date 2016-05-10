@@ -22,7 +22,6 @@
 #' @field n.spatial numeric.
 #' @field instants POSIXlt.
 #'
-#' @import methods
 #' @import ncdf4
 #' @exportClass rcvirtual.netcdf
 #'

@@ -16,10 +16,11 @@
 setRefClass(
   Class = "rcvirtual.strategy",
   contains = c("rcvirtual.basic", "VIRTUAL"),
-  fields = list(parameters = "rcvirtual.parameters",
-                fit.counter = "numeric",
-                model.res = "list",
-                model.fitted = "logical"),
+  fields = list(
+    parameters = "rcvirtual.parameters",
+    fit.counter = "numeric",
+    model.res = "list",
+    model.fitted = "logical"),
   methods = list(
 
     # ------------------------------------------------------
@@ -88,12 +89,12 @@ setRefClass(
     },
 
     set.value = function(param.name, objs,
-                         update.counter = TRUE){
+                         update.timestamp = TRUE){
       "Store an object as a parameter"
 
       .self$parameters$set.data(
         param.name = param.name, field.name = "value",
-        objs = objs, update.counter = update.counter)
+        objs = objs, update.timestamp = update.timestamp)
     },
 
     set.reshape = function(pars, sz){
@@ -105,10 +106,10 @@ setRefClass(
           }
           .self$parameters$set.data(
             param.name = mypar, field.name = "size",
-            obj = sz, update.counter = FALSE)
+            obj = sz, update.timestamp = FALSE)
           .self$parameters$set.data(
             param.name = mypar, field.name = "value",
-            update.counter = FALSE,
+            update.timestamp = FALSE,
             obj = rep(.self$get.value(mypar), sz))
           # lb <- .self$parameters$get.data(
           #   param.name = mypar, field.name = "lbound")

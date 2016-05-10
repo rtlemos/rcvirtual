@@ -28,7 +28,8 @@ setRefClass(
     mean = "list",
     variance = "list",
     diff = "list",
-    size = "list"
+    size = "list",
+    timestamp = "list"
   ),
   methods = list(
 
@@ -54,13 +55,11 @@ setRefClass(
       names(df) <- names(.self$conf)
 
       # Generating lists for objects
-      .self$netcdf.io <- .self$value <- .self$count <-
-        .self$mean <- .self$variance <- .self$count <-
-        .self$size <- vector("list", length = n.p)
-      names(.self$netcdf.io) <- names(.self$value) <-
-        names(.self$count) <- names(.self$mean) <-
-        names(.self$variance) <- names(.self$count) <-
-        names(.self$size) <- df$name
+      .self$netcdf.io <- .self$value <- .self$mean <- .self$variance <-
+        .self$count <- .self$size <- vector("list", length = n.p)
+      names(.self$netcdf.io) <- names(.self$value) <- names(.self$count) <-
+        names(.self$mean) <- names(.self$variance) <- names(.self$size) <-
+        df$name
 
       # Initializing
       for (i in 1:n.p) {
@@ -71,10 +70,13 @@ setRefClass(
         .self$mean[[i]] <- zeros
         .self$variance[[i]] <- zeros
         .self$diff[[i]] <- zeros
-        # counter starts at -1 for objects without
+        # timestamp starts at -1 for objects without
         # initiation (NA), and 0 for initiated objects
-        .self$count[[i]] <- rep(-1 * is.na(df$initial[i]),
-                                sz)
+        if (is.na(df$initial[i])) {
+          .self$timestamp[[i]] <- NA
+        } else {
+          .self$timestamp[[i]] <- Sys.time()
+        }
       }
 
       # Setting the netcdf daemons and slices
@@ -228,7 +230,7 @@ setRefClass(
     set.data = function(param.name = NULL,
                         field.name = NULL,
                         objs = NULL,
-                        update.counter = TRUE,
+                        update.timestamp = TRUE,
                         touch = FALSE){
       # param.name = name of parameter (alpha, A, etc)
       # field.name = name of parameter's property
@@ -246,9 +248,8 @@ setRefClass(
         return() #no update
       } else {
         .self[[field.name]][[param.name]] <- objs
-        if (update.counter) {
-          .self$count[[param.name]] <-
-            .self$count[[param.name]] + 1
+        if (update.timestamp) {
+          .self$timestamp[[param.name]] <- Sys.time()
         }
       }
     },
@@ -733,7 +734,7 @@ setRefClass(
         .self$set.data(param.name = "Y",
                        field.name = "value",
                        objs = new.y,
-                       update.counter = FALSE)
+                       update.timestamp = FALSE)
       }
 
       #checking if number of time steps matches the number

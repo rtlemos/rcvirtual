@@ -15,46 +15,47 @@ This RC contains fields (a.k.a. "attributes") and methods
 \section{Methods}{
 
 \describe{
-\item{\code{get.bivariate(two.vars)}}{Provides data to plot the posterior distribution of variables}
+\item{\code{get.bivariate(two.vars)}}{Provides data to plot the posterior
+distribution of variables}
 
-\item{\code{get.name()}}{Provides the object's name.}
+\item{\code{get.projection(two.vars)}}{Projects variables onto a coordinate system of
+2 anti-variables, if they exist.}
 
-\item{\code{get.projection(two.vars)}}{Projects variables onto a coordinate system of 2 anti-variables,
-if they exist.}
+\item{\code{iget.convert(x, j = NULL)}}{Forward-transformation (i.e., from X to Z) of
+the vector x, or just one element of it.}
 
-\item{\code{iget.convert(x, j = NULL)}}{Forward-transformation (i.e., from X to Z) of the vector x,
-or just one element of it.}
+\item{\code{iget.index(two.vars, coords, lb, first.zc, spac, znp)}}{Provides the indices of the 2 z-variables
+closest to the input coordinates}
 
-\item{\code{iget.index(two.vars, coords, lb, first.zc, spac, znp)}}{Provides the indices of the 2 z-variables closest to
-the input coordinates}
+\item{\code{iget.optimization.parameters()}}{This function should be replaced with another
+that does not return NULL, when auxiliary
+parameters exist.}
 
-\item{\code{iget.optimization.parameters()}}{This function should be replaced with another that does not
-return NULL, when auxiliary parameters exist.}
-
-\item{\code{iget.parameter(id, eval = TRUE, ...)}}{Provides the random variable's parameter value (eval=T),
-or its deparsed expression (eval=F)}
+\item{\code{iget.parameter(id, eval = TRUE, ...)}}{Provides the random variable's parameter value
+(eval=T), or its deparsed expression (eval=F)}
 
 \item{\code{iget.parameter.name(id)}}{Provides the name of parameter index id.}
 
-\item{\code{iget.Z()}}{Provides the associated z-transformed random variable or vector.}
+\item{\code{iget.Z()}}{Provides the associated z-transformed random
+variable or vector.}
 
-\item{\code{iget.zconvert(z, j = NULL)}}{Back-transformation (i.e., from Z to X) of the vector z,
-or just one element of it.}
+\item{\code{iget.zconvert(z, j = NULL)}}{Back-transformation (i.e., from Z to X) of
+the vector z, or just one element of it.}
 
-\item{\code{iget.zindex(two.vars, coords, lb, first.zc, spac, znp)}}{Provides the indices of the 2 z-variables closest to the
-input coordinates}
+\item{\code{iget.zindex(two.vars, coords, lb, first.zc, spac, znp)}}{Provides the indices of the 2 z-variables
+closest to the input coordinates}
 
-\item{\code{iset.dexpr(id, deparsed.expr)}}{Sets the deparsed expression used to construct the object's
-parameters (e.g., mean, variance)}
+\item{\code{iset.dexpr(id, deparsed.expr)}}{Sets the deparsed expression used to
+construct the object's parameters
+(e.g., mean, variance)}
 
 \item{\code{iset.parameter(id, value)}}{Saves a new value for a given parameter.}
 
-\item{\code{parameter(id, value = NULL, eval = TRUE)}}{Interface to read (value=NULL) or write (value not NULL)
+\item{\code{parameter(id, value = NULL, eval = TRUE)}}{Interface to read (value=NULL)
+or write (value not NULL)
 the object's parameters}
 
 \item{\code{reset.rng()}}{Resets this object's random number generator}
-
-\item{\code{set.name(new.name)}}{Sets the name of a random variable/vector.}
 
 \item{\code{size()}}{Provides the size of this object.}
 }}
