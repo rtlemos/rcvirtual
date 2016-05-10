@@ -56,10 +56,11 @@ setRefClass(
 
       # Generating lists for objects
       .self$netcdf.io <- .self$value <- .self$mean <- .self$variance <-
-        .self$count <- .self$size <- vector("list", length = n.p)
+        .self$count <- .self$size <- .self$timestamp <-
+        vector("list", length = n.p)
       names(.self$netcdf.io) <- names(.self$value) <- names(.self$count) <-
         names(.self$mean) <- names(.self$variance) <- names(.self$size) <-
-        df$name
+        names(.self$timestamp) <- df$name
 
       # Initializing
       for (i in 1:n.p) {
