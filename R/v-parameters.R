@@ -841,7 +841,7 @@ setRefClass(
       parent.timestamps <- mapply(parent.names, FUN = function(nm) {
         .self$get.data(param.name = nm, field.name = 'timestamp')
       })
-      if (any(is.na(parent.timestrenamps))) {
+      if (any(is.na(parent.timestamps))) {
         print(paste0('Problem computing ', param.name))
         print('NA timestamp(s); parent(s) should be computed first.')
         print(paste0('Parents: ', parent.names))
