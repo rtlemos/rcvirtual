@@ -73,10 +73,10 @@ setRefClass(
         .self$diff[[i]] <- zeros
         # timestamp starts at -1 for objects without
         # initiation (NA), and 0 for initiated objects
-        if (is.na(df$initial[i])) {
-          .self$timestamp[[i]] <- NA
-        } else {
+        if (!is.na(df$initial[i]) | df$type[[i]] == 'fixed') {
           .self$timestamp[[i]] <- Sys.time()
+        } else {
+          .self$timestamp[[i]] <- NA
         }
       }
 
@@ -842,10 +842,10 @@ setRefClass(
         .self$get.data(param.name = nm, field.name = 'timestamp')
       })
       if (any(is.na(parent.timestamps))) {
-        print(paste0('Problem computing ', param.name))
-        print('NA timestamp(s); parent(s) should be computed first.')
-        print(paste0('Parents: ', parent.names))
-        print(paste0('Timestamps: ', parent.timestamps))
+        cat('Problem computing ', param.name, '\n')
+        cat('NA timestamp(s); parent(s) should be computed first. \n')
+        cat('Parents: ', parent.names, '\n')
+        cat('Timestamps: ', parent.timestamps, '\n')
         return(TRUE)
       }
       if (any(parent.timestamps > my.timestamp)) {
