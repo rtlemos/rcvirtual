@@ -274,7 +274,7 @@ setRefClass(
     get.log.likelihood = function(summarized = TRUE){
       "Returns the log likelihood for a parameter vector"
 
-      L <- .self$get.value("L")
+      L <- .selfparameters$get.data(long.name = 'log-likelihood')
       out <- if (summarized) sum(unlist(L$llik)) else L$llik
       return(out)
     },
