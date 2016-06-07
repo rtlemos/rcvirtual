@@ -358,7 +358,7 @@ setRefClass(
       return(dt)
     },
 
-    get.slice = function(bounds = NULL){
+    get.slice = function(bounds = NULL, format = 'lon/lat/time'){
 
       # Generating a (nlat x nlon) x 2 array of
       # available ERA grid points --> l
@@ -439,7 +439,8 @@ setRefClass(
       if (.self$is.spatial.avg & .self$is.time.indexed) {
         myslice <- .self$iget.3Dslice(
           var.name = .self$conf$var.name,
-          xbounds360 = xb, ybounds = yb, tidx = tidx)
+          xbounds360 = xb, ybounds = yb, tidx = tidx,
+          format = format)
       } else if (.self$is.spatial.avg &
                  !.self$is.time.indexed) {
         myslice <- .self$iget.2Dslice.grid(
