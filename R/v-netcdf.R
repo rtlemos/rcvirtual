@@ -600,34 +600,24 @@ setRefClass(
     iget.3Dslice = function(var.name = NULL,
                             xbounds360 = NULL,
                             ybounds = NULL,
-                            tidx = NULL,
-                            format = 'lon/lat/time') {
-      "Get slice of data from a 3D variable. Formats:
-      lon/lat/time: default;
-      lat/lon/time: more amenable for plotting matrix;
-      revlat/lon/time: best for plotting Matrix data."
+                            tidx = NULL) {
+      "Get slice of data from a 3D variable."
 
       if (is.null(var.name)) {
         vname <- .self$var.names[1]
       } else {
         vname <- var.name
       }
-      bnds <- .self$iget.spatial.bounds(
-        xbounds360 = xbounds360, ybounds = ybounds)
-      lon <- ncdf4::ncvar_get(.self$mydata,
-                              .self$lon.name)
-      lat <- ncdf4::ncvar_get(.self$mydata,
-                              .self$lat.name)
+      bnds <- .self$iget.spatial.bounds(xbounds360 = xbounds360,
+                                        ybounds = ybounds)
+      lon <- ncdf4::ncvar_get(.self$mydata, .self$lon.name)
+      lat <- ncdf4::ncvar_get(.self$mydata, .self$lat.name)
       xidx.unsorted <- c(
-        which.min(abs(
-          lon - bnds$x[1] + 1e10 * (lon < bnds$x[1]))),
-        which.min(abs(lon - bnds$x[2] +
-                        1e10 * (lon > bnds$x[2]))))
+        which.min(abs(lon - bnds$x[1] + 1e10 * (lon < bnds$x[1]))),
+        which.min(abs(lon - bnds$x[2] + 1e10 * (lon > bnds$x[2]))))
       yidx.unsorted <- c(
-        which.min(abs(lat - bnds$y[1] +
-                        1e10 * (lat < bnds$y[1]))),
-        which.min(abs(lat - bnds$y[2] +
-                        1e10 * (lat > bnds$y[2]))))
+        which.min(abs(lat - bnds$y[1] + 1e10 * (lat < bnds$y[1]))),
+        which.min(abs(lat - bnds$y[2] + 1e10 * (lat > bnds$y[2]))))
       xidx <- sort(xidx.unsorted)
       yidx <- sort(yidx.unsorted)
       nx <- xidx[2] - xidx[1] + 1
@@ -635,26 +625,17 @@ setRefClass(
       np <- nx * ny
       nt <- tidx[2] - tidx[1] + 1
       #Getting the data slice
-      mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
-        start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
-      value <- switch(
-        format,
-        'lon/lat/time' = matrix(nr = np, nc = nt, mydt),
-        'lat/lon/time' = matrix(nr = np, nc = nt, aperm(mydt, c(2,1,3))),
-        'revlat/lon/time' = {
-          ord <- as.numeric(t(mapply(1:ny, FUN = function(j) {
-            seq(j, ny * nx, by = ny)
-          })))
-          mat <- matrix(nr = np, nc = nt, aperm(mydt, c(2,1,3)))
-          mat[ord, ]
-        }
-      )
-      if (format == 'revlat/lon/time') {
-        aux <- lat[yidx.unsorted[2]:yidx.unsorted[1]]
+      if (.self$mydata[[vname]]$dim[[1]]$name == .self$lon.name) {
+        mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
+          start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
+      } else if (.self$mydata[[vname]]$dim[[2]]$name == .self$lon.name) {
+        mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
+         start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
       } else {
-        aux <- lat[yidx.unsorted[1]:yidx.unsorted[2]]
+        stop ("Don't know where longitude is.")
       }
-      myslice <- list(lat = aux,
+      value <- matrix(nr = np, nc = nt, mydt)
+      myslice <- list(lat = lat[yidx.unsorted[1]:yidx.unsorted[2]],
                       lon = lon[xidx.unsorted[1]:xidx.unsorted[2]],
                       value = value)
       return(myslice)
