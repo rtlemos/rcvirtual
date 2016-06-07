@@ -640,12 +640,12 @@ setRefClass(
       value <- switch(
         format,
         'lon/lat/time' = matrix(nr = np, nc = nt, mydt),
-        'lat/lon/time' = matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3))),
+        'lat/lon/time' = matrix(nr = np, nc = nt, aperm(mydt, c(2,1,3))),
         'revlat/lon/time' = {
           ord <- as.numeric(t(mapply(1:ny, FUN = function(j) {
             seq(j, ny * nx, by = ny)
           })))
-          mat <- matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3)))
+          mat <- matrix(nr = np, nc = nt, aperm(mydt, c(2,1,3)))
           mat[ord, ]
         }
       )
