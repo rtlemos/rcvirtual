@@ -599,8 +599,12 @@ setRefClass(
     iget.3Dslice = function(var.name = NULL,
                             xbounds360 = NULL,
                             ybounds = NULL,
-                            tidx = NULL){
-      "Get slice of data from a 3D variable (time/lat/lon)"
+                            tidx = NULL,
+                            format = 'lon/lat/time') {
+      "Get slice of data from a 3D variable. Formats:
+      lon/lat/time: default;
+      lat/lon/time: more amenable for plotting matrix;
+      revlat/lon/time: best for plotting Matrix data."
 
       if (is.null(var.name)) {
         vname <- .self$var.names[1]
@@ -629,18 +633,29 @@ setRefClass(
         (yidx[2] - yidx[1] + 1)
       nt <- tidx[2] - tidx[1] + 1
       #Getting the data slice
-      value <- matrix(
-        nr = np, nc = nt, ncdf4::ncvar_get(
-          .self$mydata,
-          varid = vname,
-          start = c(xidx[1], yidx[1], tidx[1]),
-          count = c(xidx[2] - xidx[1] + 1,
-                    yidx[2] - yidx[1] + 1,
-                    tidx[2] - tidx[1] + 1)))
-      myslice <- list(
-        lat = lat[yidx.unsorted[1]:yidx.unsorted[2]],
-        lon = lon[xidx.unsorted[1]:xidx.unsorted[2]],
-        value = value)
+      mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
+        start = c(xidx[1], yidx[1], tidx[1]),
+        count = c(xidx[2] - xidx[1] + 1,
+                  yidx[2] - yidx[1] + 1,
+                  tidx[2] - tidx[1] + 1))
+      value <- switch(
+        format,
+        'lon/lat/time' = matrix(nr = np, nc = nt, mydt),
+        'lat/lon/time' = matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3))),
+        'revlat/lon/time' = {
+          vec <- seq(yidx[2] - yidx[1] + 1, 1, by = -1)
+          out <- mapply(1:nt, FUN = function(d) t(mydt[, vec, d]))
+          return(out)
+        }
+      )
+      if (format == 'revlat/lon/time') {
+        aux <- lat[yidx.unsorted[2]:yidx.unsorted[1]]
+      } else {
+        lat[yidx.unsorted[1]:yidx.unsorted[2]]
+      }
+      myslice <- list(lat = aux,
+                      lon = lon[xidx.unsorted[1]:xidx.unsorted[2]],
+                      value = value)
       return(myslice)
     },
 
