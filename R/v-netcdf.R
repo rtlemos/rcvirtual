@@ -358,7 +358,7 @@ setRefClass(
       return(dt)
     },
 
-    get.slice = function(bounds = NULL, format = 'lon/lat/time'){
+    get.slice = function(bounds = NULL){
 
       # Generating a (nlat x nlon) x 2 array of
       # available ERA grid points --> l
@@ -439,8 +439,7 @@ setRefClass(
       if (.self$is.spatial.avg & .self$is.time.indexed) {
         myslice <- .self$iget.3Dslice(
           var.name = .self$conf$var.name,
-          xbounds360 = xb, ybounds = yb, tidx = tidx,
-          format = format)
+          xbounds360 = xb, ybounds = yb, tidx = tidx)
       } else if (.self$is.spatial.avg &
                  !.self$is.time.indexed) {
         myslice <- .self$iget.2Dslice.grid(
@@ -630,7 +629,7 @@ setRefClass(
           start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
       } else if (.self$mydata[[vname]]$dim[[2]]$name == .self$lon.name) {
         mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
-         start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
+         start = c(yidx[1], xidx[1], tidx[1]), count = c(ny, nx, nt))
       } else {
         stop ("Don't know where longitude is.")
       }
