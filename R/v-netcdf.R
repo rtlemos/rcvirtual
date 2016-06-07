@@ -624,10 +624,10 @@ setRefClass(
       np <- nx * ny
       nt <- tidx[2] - tidx[1] + 1
       #Getting the data slice
-      if (.self$mydata[[vname]]$dim[[1]]$name == .self$lon.name) {
+      if (.self$mydata$var[[vname]]$dim[[1]]$name == .self$lon.name) {
         mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
           start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
-      } else if (.self$mydata[[vname]]$dim[[2]]$name == .self$lon.name) {
+      } else if (.self$mydata$var[[vname]]$dim[[2]]$name == .self$lon.name) {
         mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
          start = c(yidx[1], xidx[1], tidx[1]), count = c(ny, nx, nt))
       } else {
