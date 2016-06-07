@@ -651,7 +651,7 @@ setRefClass(
       if (format == 'revlat/lon/time') {
         aux <- lat[yidx.unsorted[2]:yidx.unsorted[1]]
       } else {
-        lat[yidx.unsorted[1]:yidx.unsorted[2]]
+        aux <- lat[yidx.unsorted[1]:yidx.unsorted[2]]
       }
       myslice <- list(lat = aux,
                       lon = lon[xidx.unsorted[1]:xidx.unsorted[2]],
