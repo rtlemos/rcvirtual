@@ -642,11 +642,17 @@ setRefClass(
         'lon/lat/time' = matrix(nr = np, nc = nt, mydt),
         'lat/lon/time' = matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3))),
         'revlat/lon/time' = {
+<<<<<<< HEAD
           ord <- as.numeric(t(mapply(1:ny, FUN = function(j) {
             seq(j, ny * nx, by = ny)
           })))
           mat <- matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3)))
           mat[ord, ]
+=======
+          vec <- seq(yidx[2] - yidx[1] + 1, 1, by = -1)
+          out <- mapply(1:nt, FUN = function(d) as.numeric(t(mydt[, vec, d])))
+          return(out)
+>>>>>>> 32a553b0988262e56b68ce4fca025f922b341c57
         }
       )
       if (format == 'revlat/lon/time') {
