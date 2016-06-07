@@ -630,23 +630,23 @@ setRefClass(
                         1e10 * (lat > bnds$y[2]))))
       xidx <- sort(xidx.unsorted)
       yidx <- sort(yidx.unsorted)
-      np <- (xidx[2] - xidx[1] + 1) *
-        (yidx[2] - yidx[1] + 1)
+      nx <- xidx[2] - xidx[1] + 1
+      ny <- yidx[2] - yidx[1] + 1
+      np <- nx * ny
       nt <- tidx[2] - tidx[1] + 1
       #Getting the data slice
       mydt <- ncdf4::ncvar_get(.self$mydata, varid = vname,
-        start = c(xidx[1], yidx[1], tidx[1]),
-        count = c(xidx[2] - xidx[1] + 1,
-                  yidx[2] - yidx[1] + 1,
-                  tidx[2] - tidx[1] + 1))
+        start = c(xidx[1], yidx[1], tidx[1]), count = c(nx, ny, nt))
       value <- switch(
         format,
         'lon/lat/time' = matrix(nr = np, nc = nt, mydt),
         'lat/lon/time' = matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3))),
         'revlat/lon/time' = {
-          vec <- seq(yidx[2] - yidx[1] + 1, 1, by = -1)
-          out <- mapply(1:nt, FUN = function(d) t(mydt[, vec, d]))
-          return(out)
+          ord <- as.numeric(t(mapply(1:ny, FUN = function(j) {
+            seq(j, ny * nx, by = ny)
+          })))
+          mat <- matrix(nr = np, nc = nt, aperm(aperm, c(2,1,3)))
+          mat[ord, ]
         }
       )
       if (format == 'revlat/lon/time') {
