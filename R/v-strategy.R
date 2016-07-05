@@ -11,6 +11,7 @@
 #' @field model.res list. Model fitting output
 #' @field model.fitted logical. Has the model been fitted?
 #'
+#' @importFrom methods new
 #' @exportClass rcvirtual.strategy
 #'
 setRefClass(

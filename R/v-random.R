@@ -6,6 +6,7 @@
 #' (a.k.a. "procedures") for that any random RC must have.
 #'
 #' @importFrom rcrandom rcrng
+#' @importFrom methods new
 #' @exportClass rcvirtual.random
 #'
 rcrandom.abstract <- setRefClass(

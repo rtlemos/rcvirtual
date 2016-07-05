@@ -6,6 +6,7 @@
 #' (a.k.a. "procedures") for that any plotter RC must have.
 #'
 #' @import grid
+#' @importFrom methods new
 #' @exportClass rcvirtual.plotter
 #'
 setRefClass(

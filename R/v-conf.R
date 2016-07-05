@@ -5,6 +5,7 @@
 #' @field strategy. Specifications for strategy
 #' @field plotter. Specifications for plotter
 #'
+#' @importFrom methods new
 #' @exportClass rcvirtual.conf
 #'
 setRefClass(
@@ -13,8 +14,7 @@ setRefClass(
   fields = list(daemon = "ANY",
                 parameters = "ANY",
                 strategy = "ANY",
-                plotter = "ANY",
-                package.name = "character"
+                plotter = "ANY"
   ),
   methods = list(
 

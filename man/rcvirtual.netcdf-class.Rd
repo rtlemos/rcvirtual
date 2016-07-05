@@ -78,7 +78,7 @@ file, e.g. for plotting. Subsamples if needed.}
 (time and location index)}
 
 \item{\code{iget.3Dslice(var.name = NULL, xbounds360 = NULL, ybounds = NULL,
-  tidx = NULL)}}{Get slice of data from a 3D variable (time/lat/lon)}
+  tidx = NULL)}}{Get slice of data from a 3D variable.}
 
 \item{\code{iget.spatial.bounds(xbounds360, ybounds)}}{Sets up spatial bounds for slicing}
 

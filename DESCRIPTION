@@ -11,7 +11,8 @@ Description: This package contains a set of reference classes for statistical
     they are designed to set the wireframe for other, "concrete" classes, that
     implement a specific statistical model. After installing,
     type the following to get started: > vignette('rcvirtual-vignette', package = 'rcvirtual')
-License: APACHE 2.0
+License:
+    file LICENSE
 LazyData: true
 Collate:
     v-basic.R
@@ -26,6 +27,7 @@ Collate:
     v-daemon.R
     v-package.R
 Imports:
+    methods,
     rcrandom,
     ncdf4,
     grid,

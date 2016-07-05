@@ -23,6 +23,7 @@
 #' @field instants POSIXlt.
 #'
 #' @import ncdf4
+#' @importFrom methods new
 #' @exportClass rcvirtual.netcdf
 #'
 setRefClass(

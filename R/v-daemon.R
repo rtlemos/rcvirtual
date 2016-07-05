@@ -9,6 +9,7 @@
 #' @field strategy. Strategy object
 #' @field plotter. Plotter object
 #'
+#' @importFrom methods new
 #' @exportClass rcvirtual.daemon
 #'
 setRefClass(

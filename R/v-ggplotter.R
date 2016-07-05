@@ -7,7 +7,7 @@
 #' ggplots of data.
 #'
 #' @import ggplot2
-#'
+#' @importFrom methods new
 #' @exportClass rcvirtual.ggplotter
 #'
 setRefClass(

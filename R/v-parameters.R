@@ -14,7 +14,7 @@
 #' @field diff list.
 #'
 #' @import ncdf4
-#'
+#' @importFrom methods new
 #' @exportClass rcvirtual.parameters
 #'
 setRefClass(

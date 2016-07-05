@@ -24,6 +24,11 @@ With this package, I am attempting to establish a few patterns in my code,
 so that it becomes easier to read, debug, and modify. I have created the following
 virtual reference classes:
 
+- The Basic class. If there are fields or methods that all classes should have, they ought to be
+placed here. This is the archetypal class, meaning that all others inherit from this one (Figure 1).
+
+
+
 - The Daemon class. Also known as the Puppeteer, this is the class that controls all others.
 Ideally, lay users of this package should only have to learn how to interact with objects
 of this class.
@@ -44,6 +49,4 @@ Printer class.
 - The Random class. Some Parameters may be random variables or vectors, meaning that an efficient,
 parallelizable pseudo-random number generator is needed. 
 
-- The Basic class. If there are fields or methods that all classes should have, they ought to be
-placed here. This is the archetypal class, meaning that all others inherit from this one.
 

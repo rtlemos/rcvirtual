@@ -11,6 +11,7 @@
 #' @field conf list. Object configuration
 #'
 #' @import ncdf4
+#' @importFrom methods new
 #' @exportClass rcvirtual.basic
 #'
 setRefClass(
