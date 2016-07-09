@@ -252,7 +252,7 @@ setRefClass(
       .self$set.in.buffer(myplot,xpos,ypos)
     },
 
-    probability.1dplot = function(specs, mypoints,
+    probability.1dplot = function(specs, mypoints = NULL,
                                   xpos = 1, ypos = 1){
       "Plot of the posterior/forecast distribution at a
       single site, over time"

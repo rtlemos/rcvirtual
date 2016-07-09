@@ -6,7 +6,6 @@
 #' (a.k.a. "procedures") for that any strategy RC must have.
 #'
 #' @field parameters rcvirtual.parameters. Parameters used by strategy.
-#' @field datasets rcvirtual.datasets. Input data sets
 #' @field fit.counter numeric. Iteration counter
 #' @field model.res list. Model fitting output
 #' @field model.fitted logical. Has the model been fitted?

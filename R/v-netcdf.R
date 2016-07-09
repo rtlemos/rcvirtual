@@ -517,7 +517,7 @@ setRefClass(
     # ------------------------------------------------------
 
     iget.2Dslice.station = function(var.name = NULL,
-                                    xbounds360=NULL,
+                                    xbounds360 = NULL,
                                     ybounds = NULL,
                                     tidx = NULL){
       "Get a slice of data from a specified 2D variable

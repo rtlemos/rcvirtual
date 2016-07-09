@@ -178,11 +178,8 @@ rcrandom.abstract <- setRefClass(
     ###################
     # "Private methods"
     ###################
-    is.operation.allowed = function(operation,
-                                    argclass){
-      allowed <- any(
-        .self$operations.classes[[operation]] ==
-          argclass)
+    is.operation.allowed = function(operation, argclass){
+      allowed <- any(.self$operations.classes[[operation]] == argclass)
       return(allowed)
     },
 

@@ -649,8 +649,7 @@ setRefClass(
       return(out)
     },
 
-    get.density = function(variate, distr, mean = mean, var,
-                           lb, ub, dolog){
+    get.density = function(variate, distr, mean, var, lb, ub, dolog){
       "Computes a p.d.f., based on input specifications"
 
       if (is.null(distr)) stop("distr cannot be NULL")
@@ -691,7 +690,7 @@ setRefClass(
     # Is methods -------------------------------------------
     # ------------------------------------------------------
 
-    is.valid = function(obj){
+    is.valid = function(){
       "Function that checks if parameters are valid."
 
       if (.self$verbose) print(

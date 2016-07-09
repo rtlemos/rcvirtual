@@ -87,7 +87,7 @@ setRefClass(
     # Set methods ------------------------------------------
     # ------------------------------------------------------
 
-    set.buffer.size = function(nr, nc){
+    set.buffer.size = function(nr = 1, nc = 1){
       "Sets up plotter's buffer size
       (number of rows and columns)"
 
@@ -147,16 +147,14 @@ setRefClass(
         if (length(pos) == 0) {
           return(type[i])
         } else {
-          q1 <- paste0(.self$palettes[[pos]],
-                       collapse = "', '")
+          q1 <- paste0(.self$palettes[[pos]], collapse = "', '")
           q2 <- paste0(type[i]," = c('", q1, "')")
           print(q2, quote = FALSE)
           return("found")
         }
       })
       if (any(out != "found")) {
-        stop("Palette(s) not found: ",
-             out[out != "found"])
+        stop("Palette(s) not found: ", out[out != "found"])
       }
     },
 

@@ -10,6 +10,27 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, echo=FALSE}
+# loading libraries
+library(png)
+library(knitr)
+library(grid)
+library(ggplot2)
+# options
+opts_chunk$set(cache = TRUE, echo = FALSE)
+opts_chunk$set(cache.path = '/tmp/')
+# auxiliary function
+plot.png <- function(filename) {
+  img <- readPNG(paste0(filename, '.png'))
+  g <- rasterGrob(img, interpolate = TRUE)
+  qplot(dim(img)[1] / 2, dim(img)[2] / 2) + 
+    xlim(c(1, dim(img)[1])) + ylim(c(1, dim(img)[2])) +
+    geom_point() +
+    annotation_custom(g, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf) +
+    theme_void()
+}
+```
+
 ## Purpose
 
 In my experience, statistical model code always consists of pretty much the same:
@@ -25,28 +46,67 @@ so that it becomes easier to read, debug, and modify. I have created the followi
 virtual reference classes:
 
 - The Basic class. If there are fields or methods that all classes should have, they ought to be
-placed here. This is the archetypal class, meaning that all others inherit from this one (Figure 1).
+placed here. This is the archetypal class, meaning that all others inherit from this one.
 
-
+```{r basic, fig.height=3}
+plot.png('basic')
+```
 
 - The Daemon class. Also known as the Puppeteer, this is the class that controls all others.
 Ideally, lay users of this package should only have to learn how to interact with objects
 of this class.
 
+```{r daemon, fig.width=2.5}
+plot.png('daemon')
+```
+
 - The Strategy class. This is the class that defines the strategy to fit a particular statistical
 model. Strategy objects should mostly contain methods (i.e., functions), not data (i.e., fields). 
+
+```{r strategy, fig.width=4}
+plot.png('strategy')
+```
 
 - The Parameters class. This is the class that holds and controls data sets and model parameters.
 Objects of this class should be accessed through Daemon and Strategy objects. The class contains
 methods that set and get data. Data modification methods should be placed in Strategy classes.
 
+```{r parameters, fig.width=9}
+plot.png('parameters')
+```
+
 - The Factory class. Sometimes, it is necessary to pre-process data before the model can be run.
 This task is performed once, by a Factory object, controlled by the Daemon.
 
-- The Printer class. To visualize model input and output, the Daemon controls an object of the
-Printer class.
+```{r factory, fig.width=1}
+plot.png('factory')
+```
+
+- The Plotter class. To visualize model input and output, the Daemon controls an object of the
+Plotter class.
+
+```{r plotter, fig.width=3}
+plot.png('plotter')
+```
+
+- The GGPlotter class. Because R plots always look better with `ggplot`, I wrote an
+offspring of the Plotter class.
+
+```{r ggplotter, fig.width=3}
+plot.png('ggplotter')
+```
 
 - The Random class. Some Parameters may be random variables or vectors, meaning that an efficient,
 parallelizable pseudo-random number generator is needed. 
+
+```{r random, fig.width=4}
+plot.png('random')
+```
+
+Here is how these classes connect.
+
+```{r classes, fig.width=6}
+plot.png('classes')
+```
 
 
