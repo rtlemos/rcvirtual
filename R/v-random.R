@@ -129,7 +129,7 @@ rcrandom.abstract <- setRefClass(
       })
       val <- lapply(1:npr, function(i) {
         myev <- ev[[i]]
-        if (!is(myev,"RAT")) {
+        if (!is(myev,"rcvirtual.random")) {
           if (length(myev) == .self$nr) {
             out <- myev
           } else {
@@ -191,7 +191,7 @@ rcrandom.abstract <- setRefClass(
       "Saves a new value for a given parameter."
 
       if (.self$type == "Constant") {
-        if (is(value, "RAT")) {
+        if (is(value, "rcvirtual.random")) {
           rv <- value$parameter(1, eval = TRUE)
           re <- value$iget.parameter(1,
                                      eval = FALSE)
@@ -213,7 +213,7 @@ rcrandom.abstract <- setRefClass(
         .self$nr <- sz$nr
         .self$nc <- sz$nc
       } else {
-        if (is(value, "RAT")) {
+        if (is(value, "rcvirtual.random")) {
           rv <- value
           re <- value$iget.parameter(1,
                                      eval = FALSE)
@@ -241,7 +241,7 @@ rcrandom.abstract <- setRefClass(
       print("Replace with offspring method")
     },
 
-    iget.parameter = function(id, eval=TRUE, ...){
+    iget.parameter = function(id, eval = TRUE, ...){
       "Provides the random variable's parameter value
       (eval=T), or its deparsed expression (eval=F)"
 
@@ -255,7 +255,7 @@ rcrandom.abstract <- setRefClass(
             }
           )
           if (length(out) == 1) out <- out[[1]]
-          if (!is(out, "RAT")) {
+          if (!is(out, "rcvirtual.random")) {
             if (.self$nc == 1) {
               out <- as.numeric(out)
             } else {
@@ -272,12 +272,11 @@ rcrandom.abstract <- setRefClass(
             }
           )
           if (length(out) == 1) out <- out[[1]]
-          if (!is(out,"RAT") & !is(out,"list")) {
+          if (!is(out,"rcvirtual.random") & !is(out,"list")) {
             if (length(out) == .self$nr) {
               out <- as.numeric(out)
             } else {
-              out <- matrix(nrow = .self$nr,
-                            as.numeric(out))
+              out <- matrix(nrow = .self$nr, as.numeric(out))
             }
           }
         }
