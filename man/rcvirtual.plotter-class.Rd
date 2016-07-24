@@ -35,7 +35,7 @@ under.data = 'elevation')}
 \item{\code{get.state.layer(specs)}}{Uses state_coords.RData, loaded with package, to plot
 USA states according to the specs provided}
 
-\item{\code{set.buffer.size(nr, nc)}}{Sets up plotter's buffer size
+\item{\code{set.buffer.size(nr = 1, nc = 1)}}{Sets up plotter's buffer size
 (number of rows and columns)}
 
 \item{\code{set.in.buffer(myplot, xpos, ypos)}}{Places a plot in the buffer}

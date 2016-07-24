@@ -36,7 +36,7 @@ This RC contains fields (a.k.a. "attributes") and methods
 field.name = name of parameter's property
 (prior mean, lbound, value, etc.)}
 
-\item{\code{get.density(variate, distr, mean = mean, var, lb, ub, dolog)}}{Computes a p.d.f., based on input specifications}
+\item{\code{get.density(variate, distr, mean, var, lb, ub, dolog)}}{Computes a p.d.f., based on input specifications}
 
 \item{\code{get.id(param.name = NULL, long.name = NULL)}}{Given a name, provides the parameter ID.
 Works for vectors of names}
@@ -72,7 +72,7 @@ upper/lower bounds}
 
 \item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL)}}{Should a derived quantity be recomputed?}
 
-\item{\code{is.valid(obj)}}{Function that checks if parameters are valid.}
+\item{\code{is.valid()}}{Function that checks if parameters are valid.}
 
 \item{\code{is.valid.field(field.name)}}{Tests whether fname is among the field names of
 this object}

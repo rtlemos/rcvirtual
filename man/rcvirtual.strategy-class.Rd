@@ -16,8 +16,6 @@ This RC contains fields (a.k.a. "attributes") and methods
 \describe{
 \item{\code{parameters}}{rcvirtual.parameters. Parameters used by strategy.}
 
-\item{\code{datasets}}{rcvirtual.datasets. Input data sets}
-
 \item{\code{fit.counter}}{numeric. Iteration counter}
 
 \item{\code{model.res}}{list. Model fitting output}

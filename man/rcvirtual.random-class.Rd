@@ -2,7 +2,6 @@
 % Please edit documentation in R/v-random.R
 \docType{class}
 \name{rcvirtual.random-class}
-\alias{rcrandom.abstract}
 \alias{rcvirtual.random-class}
 \title{Random variables and vectors}
 \description{

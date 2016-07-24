@@ -21,7 +21,7 @@ ggplots of data.
 
 \item{\code{one.density.plot(out, mytitle, xpos = 1, ypos = 1)}}{Plots the posterior density of one hyperparameter}
 
-\item{\code{probability.1dplot(specs, mypoints, xpos = 1, ypos = 1)}}{Plot of the posterior/forecast distribution at a
+\item{\code{probability.1dplot(specs, mypoints = NULL, xpos = 1, ypos = 1)}}{Plot of the posterior/forecast distribution at a
 single site, over time}
 
 \item{\code{qqplot(specs, xpos = 1, ypos = 1)}}{Quantile-quantile plot}

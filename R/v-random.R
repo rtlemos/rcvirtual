@@ -9,7 +9,7 @@
 #' @importFrom methods new
 #' @exportClass rcvirtual.random
 #'
-rcrandom.abstract <- setRefClass(
+setRefClass(
   Class = "rcvirtual.random",
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(type = "character",
@@ -35,6 +35,38 @@ rcrandom.abstract <- setRefClass(
       "Resets this object's random number generator"
 
       .self$rng$reset()
+    },
+
+    given = function(variable, value, permanent = FALSE) {
+      "If permanent = FALSE, returns a new variable conditioned on a fixed value
+      of one of the its dependencies. If permanent = TRUE, modifies the current
+      variable (i.e., .self) permanently."
+
+      q <- if (permanent) .self else .self$copy(shallow = FALSE)
+      var.name <- deparse(substitute(variable))
+      vname <- paste0('(', var.name, ')')
+      q$dexpr <- lapply(q$dexpr, FUN = function(dexpr) {
+        as.character(mapply(dexpr, value, FUN = function(myexpr, myvalue) {
+          w <- myexpr
+          for (i in 1:3) {
+            w <- gsub(paste0('(', var.name,
+                             ')$parameter(id = ', i, ', eval = TRUE)'),
+                      replacement = myvalue, x = w, fixed = TRUE)
+          }
+          w <- gsub(pattern = vname,
+                    replacement = myvalue, x = w, fixed = TRUE)
+          w <- gsub(pattern = paste0(' ', var.name, ' '),
+                    replacement = paste0(' ', myvalue, ' '),
+                    x = w, fixed = TRUE)
+          w <- gsub(pattern = paste0('(', var.name, ' '),
+                    replacement = paste0('(', myvalue, ' '),
+                    x = w, fixed = TRUE)
+          w <- gsub(pattern = paste0(' ', var.name, ')'),
+                    replacement = paste0(' ', myvalue, ')'),
+                    x = w, fixed = TRUE)
+        }))
+      })
+      return(q)
     },
 
     get.projection  = function(two.vars){
@@ -178,6 +210,7 @@ rcrandom.abstract <- setRefClass(
     ###################
     # "Private methods"
     ###################
+
     is.operation.allowed = function(operation, argclass){
       allowed <- any(.self$operations.classes[[operation]] == argclass)
       return(allowed)
@@ -259,9 +292,7 @@ rcrandom.abstract <- setRefClass(
             if (.self$nc == 1) {
               out <- as.numeric(out)
             } else {
-              out <- matrix(nrow = .self$nr,
-                            ncold = .self$nc,
-                            as.numeric(out))
+              out <- matrix(nrow = .self$nr, ncol = .self$nc, as.numeric(out))
             }
           }
         } else {
