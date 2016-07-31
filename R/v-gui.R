@@ -4,11 +4,10 @@
 #' @field previous.txt character. Previously edited value.
 #'
 #' @import shiny
-#' @export gui
-#' @exportClass gui
+#' @exportClass rcvirtual.gui
 #'
-gui <- setRefClass(
-  Class = 'gui',
+setRefClass(
+  Class = 'rcvirtual.gui',
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(df = 'data.frame',
                 previous.txt = 'character'),
