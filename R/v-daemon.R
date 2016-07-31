@@ -27,7 +27,8 @@ setRefClass(
                           object.name = ".daemon",
                           verbose = TRUE,
                           autoconstruct = FALSE,
-                          conf = NULL){
+                          conf = NULL,
+                          use.gui = FALSE){
       "Initialize the daemon"
 
       #If user doesn't provide config, use default
@@ -41,6 +42,16 @@ setRefClass(
         }
       } else {
         uconf <- get(conf.name)$new()
+      }
+
+      # trim uconf, keeping only quantities that enter the model
+      uconf$set.trim()
+
+      # deploying the Shiny app if the user requested it, to modify uconf
+      if (use.gui) {
+        gui.name <- paste0(package.name, '.gui')
+        gg <- get(gui.name)$new(conf = uconf)
+        uconf <- gg$launch.app()
       }
 
       parameters.name <- paste0(package.name, ".parameters")

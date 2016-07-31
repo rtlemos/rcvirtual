@@ -22,5 +22,7 @@ rcvirtual.conf: Object configuration
 
 \describe{
 \item{\code{construct()}}{Construct basic objects}
+
+\item{\code{set.trim()}}{Currently this only trims the parameters data frame}
 }}
 

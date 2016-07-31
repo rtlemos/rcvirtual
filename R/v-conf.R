@@ -37,7 +37,11 @@ setRefClass(
     # ------------------------------------------------------
     # Set methods ------------------------------------------
     # ------------------------------------------------------
+    set.trim = function() {
+      'Currently this only trims the parameters data frame'
 
+      .self$parameters <- .self$parameters[.self$parameters$in.model, ]
+    },
 
     # ------------------------------------------------------
     # Get methods ------------------------------------------
@@ -64,6 +68,7 @@ setRefClass(
       tpl <- data.frame(
         name = d.ini, #variable name, or 1-letter codename
         long.name = d.ini, #long variable name
+        in.model = f.ini, #is model?
         type = d.ini, #fixed, unknown, derived
         lbound = na.ini, #lower bound
         ubound = na.ini, #upper bound

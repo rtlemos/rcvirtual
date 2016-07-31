@@ -1,43 +1,44 @@
-#' Reference class controller of a Shiny app
+#' Modify template configurations via a Shiny app
 #'
 #' @field df data.frame.
 #' @field previous.txt character. Previously edited value.
 #'
 #' @import shiny
-#' @exportClass rcvirtual.gui
+#' @exportClass rcvirtual.guiconf
 #'
 setRefClass(
-  Class = 'rcvirtual.gui',
+  Class = 'rcvirtual.guiconf',
   contains = c("rcvirtual.basic", "VIRTUAL"),
-  fields = list(df = 'data.frame',
+  fields = list(shiny.app = 'ANY',
+                df = 'data.frame',
                 previous.txt = 'character'),
   methods = list(
 
-    initialize = function(df = NULL) {
+    initialize = function(conf){
+
+      if(missing(conf)) stop('configuration object must be provided')
       .self$previous.txt <- 'Enter text here'
-      if (is.null(df)) {
-        gui.default.conf <- setRefClass(Class = 'gui.default.conf',
-                                        contains = c('rcvirtual.conf'))
-        gconf <- gui.default.conf()
-        .self$df <- gconf$get.conf.template()
-      } else {
-        .self$df <- df
-      }
-      .self$start()
+      .self$df <- conf$get.conf.template()
+      .self$shiny.app <- shinyApp(ui = .self$get.ui(),
+                                  server = .self$get.server())
+    },
+
+    launch.app = function(){
+      runApp(appDir = .self$shiny.app)
+      return(.self$df)
     },
 
     set.df = function(input, return.obj = TRUE) {
       if (.self$previous.txt != input$text) {
         i <- which(.self$df$name == input$param.name)
         j <- which(names(.self$df) == input$property)
-        if (is.numeric(.self$df[, j])) {
-          .self$df[i, j] <- as.numeric(input$text)
-        } else if(is.character(.self$df[, j])) {
-          .self$df[i, j] <- input$text
-        } else {
-          cat(class(.self[,j]))
-          stop('df column is neither numeric nor character.')
-        }
+        .self$df[i, j] <- switch(
+          class(.self$df[, j]),
+          'numeric' <- as.numeric(input$text),
+          'character' <- input$text,
+          'logical' <- as.logical(input$text),
+          stop(paste0("Cannot handle type ", class(.self[,j])))
+        )
         .self$previous.txt <- input$text
       }
       if (return.obj) {
@@ -45,26 +46,34 @@ setRefClass(
       }
     },
 
-    start = function() {
-
-      server <- function(input, output, session) {
-
+    get.server = function() {
+      function(input, output, session) {
         observe({
           updateSelectizeInput(session, "param.name",
                                choices = .self$df$name, server = TRUE)
           updateSelectizeInput(session, "property",
                                choices = names(.self$df), server = TRUE)
+          if(input$exit.button > 0) stopApp(.self$df)
         })
-
-
         gui.df <- reactive({.self$set.df(input)})
         output$show.table <- renderDataTable(gui.df())
       }
+    },
 
-      ui <- navbarPage(
-        title = 'RC GUI',
+    get.ui = function() {
+      navbarPage(
+        title = 'RC GUI Configuration',
         tabPanel(
-          'Parameter table',
+          'Daemon'
+        ),
+        tabPanel(
+          'Strategy'
+        ),
+        tabPanel(
+          'Plotter'
+        ),
+        tabPanel(
+          'Parameters',
           sidebarLayout(
             sidebarPanel(
               width = 2,
@@ -84,12 +93,12 @@ setRefClass(
                         value = "Enter text here")
             ),
             mainPanel(
-              fluidRow(column(12, dataTableOutput('show.table')))
+              fluidRow(column(12, dataTableOutput('show.table'))),
+              actionButton("exit.button", "Exit")
             )
           )
         )
       )
-      shinyApp(ui = ui, server = server)
     }
   )
 )

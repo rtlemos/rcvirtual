@@ -17,7 +17,7 @@ LazyData: true
 Collate:
     v-basic.R
     v-conf.R
-    v-gui.R
+    v-gui-conf.R
     v-netcdf.R
     v-parameters.R
     v-plotter.R
