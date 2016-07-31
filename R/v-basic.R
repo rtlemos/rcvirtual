@@ -48,7 +48,7 @@ setRefClass(
 
       if (.self$verbose) {
         cat("Constructing object", object.name,
-            "for package ", .self$package.name, "\n")
+            "for package", .self$package.name, "\n")
       }
     },
 

@@ -44,9 +44,8 @@ setRefClass(
 
       q <- if (permanent) .self else .self$copy(shallow = FALSE)
       var.name <- deparse(substitute(variable))
-      vname <- paste0('(', var.name, ')')
-      q$dexpr <- lapply(q$dexpr, FUN = function(dexpr) {
-        as.character(mapply(dexpr, value, FUN = function(myexpr, myvalue) {
+      q$dexpr <- lapply(q$dexpr, FUN = function(dd) {
+        as.character(mapply(dd, value, FUN = function(myexpr, myvalue) {
           w <- myexpr
           for (i in 1:3) {
             w <- gsub(paste0('(', var.name,
@@ -64,6 +63,7 @@ setRefClass(
           w <- gsub(pattern = paste0(' ', var.name, ')'),
                     replacement = paste0(' ', myvalue, ')'),
                     x = w, fixed = TRUE)
+          return(w)
         }))
       })
       return(q)
