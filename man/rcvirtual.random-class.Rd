@@ -20,6 +20,10 @@ distribution of variables}
 \item{\code{get.projection(two.vars)}}{Projects variables onto a coordinate system of
 2 anti-variables, if they exist.}
 
+\item{\code{given(variable, value, permanent = FALSE)}}{If permanent = FALSE, returns a new variable conditioned on a fixed value
+of one of the its dependencies. If permanent = TRUE, modifies the current
+variable (i.e., .self) permanently.}
+
 \item{\code{iget.convert(x, j = NULL)}}{Forward-transformation (i.e., from X to Z) of
 the vector x, or just one element of it.}
 

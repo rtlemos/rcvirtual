@@ -17,6 +17,7 @@ LazyData: true
 Collate:
     v-basic.R
     v-conf.R
+    v-gui.R
     v-netcdf.R
     v-parameters.R
     v-plotter.R
@@ -31,7 +32,8 @@ Imports:
     rcrandom,
     ncdf4,
     grid,
-    ggplot2
+    ggplot2,
+    shiny
 Suggests:
     testthat,
     knitr,
