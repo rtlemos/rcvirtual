@@ -27,6 +27,9 @@ setRefClass(
 
       callSuper()
 
+      conf.name <- (.self$getClass())@className[1]
+      conf.chunks <- strsplit(x = conf.name, split = '.', fixed = TRUE)[[1]]
+      .self$package.name <- conf.chunks[1]
       x <- vector("list", length = 0)
       .self$daemon <- x
       .self$parameters <- x
@@ -85,7 +88,7 @@ setRefClass(
         size = o.ini, #size of vector parameter
         input.file = d.ini, #input file
         output.file = d.ini, #output file
-        store.in.ram = t.ini,
+        store.in.ram = f.ini, #store object in memory?
         stringsAsFactors = FALSE)
       tpl$name <- name.vec
       return(tpl)

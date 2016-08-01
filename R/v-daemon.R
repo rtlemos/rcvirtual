@@ -23,84 +23,92 @@ setRefClass(
     # ------------------------------------------------------
     # Initializer methods ----------------------------------
     # ------------------------------------------------------
-    initialize = function(package.name,
-                          object.name = ".daemon",
+    initialize = function(object.name = NULL,
                           verbose = TRUE,
                           autoconstruct = FALSE,
                           conf = NULL,
                           use.gui = FALSE){
       "Initialize the daemon"
 
+      # - Initializing the Daemon -------------------------
+
+      package <- (.self$getClass())@className[1]
+      if (is.null(object.name)) {
+        object <- paste0(package, ".daemon")
+      } else {
+        object <- object.name
+      }
+
       #If user doesn't provide config, use default
-      conf.name <- paste0(package.name, ".conf")
-      if (!is.null(conf)) {
+      conf.name <- paste0(package, ".conf")
+      if (is.null(conf)) {
+        uconf <- get(conf.name)$new(package.name = package,
+                                    object.name = paste0(package, '.conf'))
+        uconf$construct()
+      } else {
         if (!is(conf, "rcvirtual.conf")) {
-          stop("You must provide an offspring of
-               rcvirtual.conf")
+          stop("You must provide an offspring of rcvirtual.conf")
         } else {
           uconf <- conf
         }
-      } else {
-        uconf <- get(conf.name)$new()
       }
 
       # trim uconf, keeping only quantities that enter the model
       uconf$set.trim()
 
-      # deploying the Shiny app if the user requested it, to modify uconf
+      # deploying the Shiny app per user request, to modify uconf
       if (use.gui) {
-        gui.name <- paste0(package.name, '.gui')
+        gui.name <- paste0(package, '.guiconf')
         gg <- get(gui.name)$new(conf = uconf)
         uconf <- gg$launch.app()
       }
 
-      parameters.name <- paste0(package.name, ".parameters")
-      strategy.name <- paste0(package.name, ".strategy")
-      plotter.name <- paste0(package.name, ".plotter")
-
-      callSuper(package.name = package.name,
-                object.name = object.name,
+      # finilizing this daemon's setup, by calling the Basic setup
+      callSuper(package.name = package,
+                object.name = object,
                 verbose = verbose,
-                autoconstruct = autoconstruct,
+                autoconstruct = FALSE,
                 conf = uconf$daemon)
 
+      # - Initializing dependencies -----------------------
+
+      parameters.name <- paste0(package, ".parameters")
+      strategy.name <- paste0(package, ".strategy")
+      plotter.name <- paste0(package, ".plotter")
+
       .self$parameters <- get(parameters.name)$new(
-        package.name = package.name,
+        package.name = package,
         object.name = parameters.name,
         conf = uconf$parameters)
       .self$strategy <- get(strategy.name)$new(
-        package.name = package.name,
+        package.name = package,
         object.name = strategy.name,
         conf = uconf$strategy)
       .self$plotter <- get(plotter.name)$new(
-        package.name = package.name,
+        package.name = package,
         object.name = plotter.name,
         conf = uconf$plotter)
 
-      #.self$dataset <- lapply(
-      #  1:length(uconf$dataset$name), FUN = function(i){
-      #    get(dataset.name)$new(
-      #      name = uconf$dataset$name[i],
-      #      conf = as.list(uconf$dataset[i, ]))
-      #  })
-
-      #linking parameters, strategy, dataset & plotter
+      # linking parameters to strategy and plotter
       .self$strategy$parameters <- .self$parameters
       .self$plotter$parameters <- .self$parameters
 
-      #saving package data into temp folder
-      #if (length(uconf$datasets$names) > 0) {
-      #  for (i in 1:length(uconf$datasets$names)) {
-      #    dname <- uconf$datasets$names[i]
-      #    oname <- paste0(tempdir(), "/", dname, ".Rdata")
-      #    save(dname, file = oname)
-      #  }
-      #}
-      },
+      # moving data sets in package to *.Rdata objects in tempdir()
+      for (obj in as.character(data(package = package)$results[, "Item"])) {
+        save(obj, file = paste0(tempdir(), '/', obj, '.RData'))
+      }
+
+      # If autoconstruct = TRUE, proceed to constructing daemon and dependencies
+      if (autoconstruct) {
+        .self$construct()
+      }
+
+    },
 
     construct = function(where.stop = "end"){
       "Constructor of daemon RCs"
 
+      # Constructing the daemon's Basic objects
       callSuper()
 
       .self$parameters$construct()

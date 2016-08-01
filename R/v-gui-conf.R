@@ -18,7 +18,7 @@ setRefClass(
 
       if(missing(conf)) stop('configuration object must be provided')
       .self$previous.txt <- 'Enter text here'
-      .self$df <- conf$get.conf.template()
+      .self$df <- conf$parameters
       .self$shiny.app <- shinyApp(ui = .self$get.ui(),
                                   server = .self$get.server())
     },
@@ -34,10 +34,9 @@ setRefClass(
         j <- which(names(.self$df) == input$property)
         .self$df[i, j] <- switch(
           class(.self$df[, j]),
-          'numeric' <- as.numeric(input$text),
-          'character' <- input$text,
-          'logical' <- as.logical(input$text),
-          stop(paste0("Cannot handle type ", class(.self[,j])))
+          'numeric' = as.numeric(input$text),
+          'character' = input$text,
+          'logical' = as.logical(input$text)
         )
         .self$previous.txt <- input$text
       }
@@ -74,27 +73,35 @@ setRefClass(
         ),
         tabPanel(
           'Parameters',
-          sidebarLayout(
-            sidebarPanel(
-              width = 2,
-              selectizeInput(
-                inputId = "param.name",
-                label = "Parameter name",
-                multiple  = FALSE,
-                choices = NULL
+          fluidPage(
+            fluidRow(
+              column(
+                2,
+                selectizeInput(
+                  inputId = "param.name",
+                  label = "Parameter name",
+                  multiple  = FALSE,
+                  choices = NULL
+                ),
+                selectizeInput(
+                  inputId = "property",
+                  label = "Property name",
+                  multiple  = FALSE,
+                  choices = NULL
+                ),
+                textInput("text", label = h5(strong("Property value")),
+                          value = "Enter text here"),
+                br(),
+                actionButton("exit.button", "Exit",
+                             icon("paper-plane"),
+                             style = paste0("color: #fff; background-color: ",
+                                            "#337ab7; border-color: #2e6da4"))
               ),
-              selectizeInput(
-                inputId = "property",
-                label = "Property name",
-                multiple  = FALSE,
-                choices = NULL
-              ),
-              textInput("text", label = h5("Property value"),
-                        value = "Enter text here")
-            ),
-            mainPanel(
-              fluidRow(column(12, dataTableOutput('show.table'))),
-              actionButton("exit.button", "Exit")
+              column(
+                10,
+                div(style = 'overflow-x: scroll; overflow-y: scroll',
+                    dataTableOutput('show.table'))
+              )
             )
           )
         )

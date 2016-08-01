@@ -42,28 +42,20 @@ setRefClass(
 
       callSuper()
 
-      # Selecting parameters in the model
-      crit <- (.self$conf$type != "-")
-      df <- as.data.frame(lapply(
-        1:length(.self$conf), FUN = function(i) {
-          .self$conf[[i]][crit]
-        }), stringsAsFactors = FALSE)
-      n.p <- nrow(df) # no. parameters
-      if (n.p == 0) {
-        stop("Model must have at least one parameter.")
-      }
-      names(df) <- names(.self$conf)
+      df <- as.data.frame(.self$conf, stringsAsFactors = FALSE)
+      number.parameters <- nrow(df)
+      stopifnot(number.parameters > 0)
 
       # Generating lists for objects
       .self$netcdf.io <- .self$value <- .self$mean <- .self$variance <-
         .self$count <- .self$size <- .self$timestamp <-
-        vector("list", length = n.p)
+        vector("list", length = number.parameters)
       names(.self$netcdf.io) <- names(.self$value) <- names(.self$count) <-
         names(.self$mean) <- names(.self$variance) <- names(.self$size) <-
         names(.self$timestamp) <- df$name
 
       # Initializing
-      for (i in 1:n.p) {
+      for (i in 1:number.parameters) {
         sz <- .self$size[[i]] <- df$size[i] #no. elements
         zeros <- rep(0, sz)
         .self$value[[i]] <- rep(df$initial[i], sz)
@@ -71,8 +63,6 @@ setRefClass(
         .self$mean[[i]] <- zeros
         .self$variance[[i]] <- zeros
         .self$diff[[i]] <- zeros
-        # timestamp starts at -1 for objects without
-        # initiation (NA), and 0 for initiated objects
         if (!is.na(df$initial[i]) | df$type[[i]] == 'fixed') {
           .self$timestamp[[i]] <- Sys.time()
         } else {
@@ -82,7 +72,7 @@ setRefClass(
 
       # Setting the netcdf daemons and slices
       gen.fun <- paste0(.self$package.name, ".netcdf")
-      for (i in 1:n.p) {
+      for (i in 1:number.parameters) {
         fi <- df$input.file[i]
         if (fi != "-") {
           ext <- substr(fi, nchar(fi) - 2, nchar(fi))
@@ -421,8 +411,8 @@ setRefClass(
 
       w <- .self$get.id(long.name = "time")
       if (length(w) != 1) {
-        stop("rcvirtual.parameters get.time.id:
-             problem with time parameter")
+        stop("In the configuration, the long.name of one
+             model parameter must be 'time'")
       }
       return(w)
       },
@@ -435,12 +425,25 @@ setRefClass(
       w <- .self$get.time.id()
       tstep.char <- .self$conf$units[[w]]
       if (frm == "character") {
-        out <- tstep.char
+        out <- switch(
+          tstep.char,
+          'days' =,
+          'day' = 'day',
+          'months' =,
+          'month' = 'month',
+          'years' =,
+          'year' = 'year',
+          stop("Unknown units for parameter 'time' in model configuration."))
       } else if (frm == "numeric") {
-        out <- switch(tstep.char,
-                      day = 1,
-                      month = 31,
-                      year = 365)
+        out <- switch(
+          tstep.char,
+          'days' =,
+          'day' = 1,
+          'months' =,
+          'month' = 31,
+          'years' =,
+          'year' = 365,
+          stop("Unknown units for parameter 'time' in model configuration."))
       }
       return(out)
     },
@@ -452,6 +455,9 @@ setRefClass(
       w <- .self$get.time.id()
       ini <- c(.self$conf$lbound[[w]],
                .self$conf$ubound[[w]])
+      if (any(!is.numeric(ini)) | any(is.na(ini))) {
+        stop("In configuration, bounds of parameter 'time' must be numeric.")
+      }
       out <- switch(
         fmt,
         numeric = ini,
@@ -605,8 +611,7 @@ setRefClass(
       unk <- lapply(
         unk.parameters.char, FUN = function(p){
           out <- lapply(specs, FUN = function(s) {
-            .self$get.data(param.name = p,
-                           field.name = s)
+            .self$get.data(param.name = p, field.name = s)
           })
           out$name <- p
           names(out) <- c(specs, "name")
@@ -698,16 +703,14 @@ setRefClass(
       fatal.errors <- FALSE
 
       #checking if Y exists and is a list
-      Y <- .self$get.data(param.name = "Y",
-                          field.name = "value")
+      Y <- .self$get.data(param.name = "Y", field.name = "value")
       if (all(is.na(Y))) {
         warning(paste0("rcvirtual.parameters validate: ",
                        "missing response Y."))
         fatal.errors <- TRUE
       } else if (class(Y) == "data.frame") {
         if (.self$verbose) print(paste0(
-          "rcvirtual.parameters validate: ",
-          "converting Y to a list"))
+          "rcvirtual.parameters validate: ", "converting Y to a list"))
         #number of observation per time instant
         nobs <- dim(.self$get.data(param.name = "l",
                                    field.name = "value"))[1]
@@ -734,8 +737,7 @@ setRefClass(
       #checking if number of time steps matches the number
       # of instances with observations
       tt <- .self$get.time(frm = "POSIXlt")
-      Y  <- .self$get.data(param.name = "Y",
-                           field.name = "value")
+      Y  <- .self$get.data(param.name = "Y", field.name = "value")
       if (length(tt) != length(Y)) {
         tstep <- .self$get.time.step("character")
         if (tstep == "day") {
@@ -772,11 +774,9 @@ setRefClass(
       }
 
       #checking if the no. observation sites is constant
-      Y <- .self$get.data(param.name = "Y",
-                          field.name = "value")
+      Y <- .self$get.data(param.name = "Y", field.name = "value")
       ltime  <- mapply(Y, FUN = function(x) length(x))
-      N <- as.numeric(.self$get.data(param.name = "N",
-                                     field.name = "value"))
+      N <- as.numeric(.self$get.data(param.name = "N", field.name = "value"))
       if (!is.na(N)) if (any(ltime !=  N)) {
         msg <- paste(
           "rcvirtual.parameters validate:",
@@ -787,10 +787,8 @@ setRefClass(
 
       # checking if the no. observation sites matches
       # no. coordinates provided
-      l <- .self$get.data(param.name = "l",
-                          field.name = "value")
-      N <- as.numeric(.self$get.data(
-        param.name = "N", field.name = "value"))
+      l <- .self$get.data(param.name = "l", field.name = "value")
+      N <- as.numeric(.self$get.data(param.name = "N", field.name = "value"))
       if (!is.null(N) & !is.null(l)) if (N != nrow(l)) {
         msg <- paste(
           "rcvirtual.parameters validate:",
