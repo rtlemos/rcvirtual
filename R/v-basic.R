@@ -96,7 +96,7 @@ setRefClass(
     },
 
     get.rdata = function(fullpath) {
-      "Reads an .RData file and passes
+      "Reads an .RData or .rda file and passes
       its contents as a list"
 
       load(fullpath)
@@ -174,6 +174,19 @@ setRefClass(
         }
       }
       return(res)
+    },
+
+    get.args = function(function.name.pattern) {
+      'Lists the arguments in all the exclusive functions
+      that match the pattern provided'
+
+      em <- .self$methods()
+      fnames <- em$exclusive[grepl(function.name.pattern, em$exclusive)]
+      fargs <- lapply(fnames, FUN = function(fn) {
+        formalArgs(eval(parse(text = paste0('.self$', fn))))
+      })
+      names(fargs) <- fnames
+      return(fargs)
     },
 
     # ------------------------------------------------------

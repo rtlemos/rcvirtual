@@ -10,7 +10,10 @@ Modify template configurations via a Shiny app
 \section{Fields}{
 
 \describe{
-\item{\code{df}}{data.frame.}
+\item{\code{shiny.app}}{ANY. Shiny app object.}
+
+\item{\code{uconf}}{rcvirtual.conf. User-defined configuration for daemon,
+parameters, strategy, and plotter}
 
 \item{\code{previous.txt}}{character. Previously edited value.}
 }}

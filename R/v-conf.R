@@ -1,4 +1,4 @@
-#' rcvirtual.conf: Object configuration
+#' rcvirtual.conf: Configuration reference class
 #'
 #' @field daemon. Specifications for daemon
 #' @field parameters. Specifications for parameters

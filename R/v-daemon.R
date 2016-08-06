@@ -59,7 +59,7 @@ setRefClass(
       # deploying the Shiny app per user request, to modify uconf
       if (use.gui) {
         gui.name <- paste0(package, '.guiconf')
-        gg <- get(gui.name)$new(conf = uconf)
+        gg <- get(gui.name)$new(uconf = uconf)
         uconf <- gg$launch.app()
       }
 
@@ -136,6 +136,18 @@ setRefClass(
         mydata <- NULL
       }
       return(mydata)
+    },
+
+    # ------------------------------------------------------
+    # Plotting methods -------------------------------------
+    # ------------------------------------------------------
+    graphplot = function(highlight.node.name = NULL, highlight.edges = 'to') {
+      'Plot a graph of model parameters, highlighting a particular node
+      and any edges that point to/from it'
+
+      graph <- .self$strategy$get.ordered.graph()
+      .self$plotter$graphplot(graph, highlight.node.name, highlight.edges)
+      .self$plotter$get.buffer.plot()
     },
 
     # ------------------------------------------------------

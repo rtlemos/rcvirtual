@@ -32,6 +32,9 @@ This RC contains fields (a.k.a. "attributes") and methods
 \item{\code{get.data(name)}}{Retrieve data, stored in memory and controlled
 by the daemon}
 
+\item{\code{graphplot(highlight.node.name = NULL, highlight.edges = "to")}}{Plot a graph of model parameters, highlighting a particular node
+and any edges that point to/from it}
+
 \item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
   verbose = TRUE, autoconstruct = FALSE, conf = NULL)}}{Default method to initialize basic objects}
 

@@ -27,6 +27,10 @@ This RC contains fields (a.k.a. "attributes") and methods
 \describe{
 \item{\code{construct()}}{Construct basic objects}
 
+\item{\code{get.data(param.name = NULL, long.name = NULL, field.name = "value")}}{Shortcut function to retrieve parameter data}
+
+\item{\code{get.graph()}}{Generates a Directed (Acyclic) Graph of model parameters}
+
 \item{\code{get.imputation(Yall, f, Q, u)}}{Impute missing values from obs & forecasts.
 Yall: vector with some NAs (missing values);
 f: vector of predictive means;
@@ -36,7 +40,12 @@ output: list with indices of NAs and imputed values}
 
 \item{\code{get.log.likelihood(summarized = TRUE)}}{Returns the log likelihood for a parameter vector}
 
-\item{\code{get.value(param.name)}}{Shortcut function to retrieve a parameter value}
+\item{\code{get.ordered.graph()}}{Provides a graph whose nodes have been topologically sorted according to
+Kanh's algorithm.
+Useful to design the update order of a model fitting algorithm.
+https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm}
+
+\item{\code{get.value(param.name = NULL, long.name = NULL)}}{Shortcut function to retrieve a parameter value}
 
 \item{\code{is.model.fitted()}}{Check if the model has been fitted}
 

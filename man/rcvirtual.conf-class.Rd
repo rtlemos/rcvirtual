@@ -3,9 +3,9 @@
 \docType{class}
 \name{rcvirtual.conf-class}
 \alias{rcvirtual.conf-class}
-\title{rcvirtual.conf: Object configuration}
+\title{rcvirtual.conf: Configuration reference class}
 \description{
-rcvirtual.conf: Object configuration
+rcvirtual.conf: Configuration reference class
 }
 \section{Fields}{
 

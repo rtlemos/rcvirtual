@@ -1,6 +1,8 @@
 #' Modify template configurations via a Shiny app
 #'
-#' @field df data.frame.
+#' @field shiny.app ANY. Shiny app object.
+#' @field uconf rcvirtual.conf. User-defined configuration for daemon,
+#' parameters, strategy, and plotter
 #' @field previous.txt character. Previously edited value.
 #'
 #' @import shiny
@@ -10,30 +12,31 @@ setRefClass(
   Class = 'rcvirtual.guiconf',
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(shiny.app = 'ANY',
-                df = 'data.frame',
+                uconf = 'rcvirtual.conf',
                 previous.txt = 'character'),
   methods = list(
 
-    initialize = function(conf){
+    initialize = function(uconf){
 
-      if(missing(conf)) stop('configuration object must be provided')
+      if(missing(uconf)) stop('configuration object must be provided')
+      stopifnot(is(uconf, 'rcvirtual.conf'))
       .self$previous.txt <- 'Enter text here'
-      .self$df <- conf$parameters
+      .self$uconf <- uconf
       .self$shiny.app <- shinyApp(ui = .self$get.ui(),
                                   server = .self$get.server())
     },
 
     launch.app = function(){
       runApp(appDir = .self$shiny.app)
-      return(.self$df)
+      return(.self$uconf)
     },
 
-    set.df = function(input, return.obj = TRUE) {
+    set.parameters = function(input, return.obj = TRUE) {
       if (.self$previous.txt != input$text) {
-        i <- which(.self$df$name == input$param.name)
-        j <- which(names(.self$df) == input$property)
-        .self$df[i, j] <- switch(
-          class(.self$df[, j]),
+        i <- which(.self$uconf$parameters$name == input$param.name)
+        j <- which(names(.self$uconf$parameters) == input$property)
+        .self$uconf$parameters[i, j] <- switch(
+          class(.self$uconf$parameters[, j]),
           'numeric' = as.numeric(input$text),
           'character' = input$text,
           'logical' = as.logical(input$text)
@@ -41,21 +44,23 @@ setRefClass(
         .self$previous.txt <- input$text
       }
       if (return.obj) {
-        return(.self$df)
+        return(.self$uconf$parameters)
       }
     },
 
     get.server = function() {
       function(input, output, session) {
         observe({
-          updateSelectizeInput(session, "param.name",
-                               choices = .self$df$name, server = TRUE)
-          updateSelectizeInput(session, "property",
-                               choices = names(.self$df), server = TRUE)
-          if(input$exit.button > 0) stopApp(.self$df)
+          updateSelectizeInput(
+            session, "param.name",
+            choices = .self$uconf$parameters$name, server = TRUE)
+          updateSelectizeInput(
+            session, "property",
+            choices = names(.self$uconf$parameters), server = TRUE)
+          if(input$exit.button > 0) stopApp(.self$uconf$parameters)
         })
-        gui.df <- reactive({.self$set.df(input)})
-        output$show.table <- renderDataTable(gui.df())
+        gui.parameters <- reactive({.self$set.parameters(input)})
+        output$show.table <- renderDataTable(gui.parameters())
       }
     },
 

@@ -270,7 +270,7 @@ setRefClass(
       long.names <- .self$conf$long.name[crit]
       id <- seq_len(length(.self$conf$name))[crit]
       file.names <- .self$conf$input.file[crit]
-      exts <- c(".RData", ".csv", ".txt")
+      exts <- c(".RData", ".Rdata", ".rdata", ".rda", ".csv", ".txt")
 
       for (i in 1:n.data) {
         x <- file.names[i]
@@ -279,11 +279,14 @@ setRefClass(
         }))]
         if (length(type) > 0) {
           if (.self$verbose) {
-            cat("Reading file for", short.names[i],
-                "(", long.names[i], ")\n")
+            cat(paste0("Reading file for ", short.names[i],
+                "(", long.names[i], ")\n"))
           }
           dt <- switch(
             type,
+            ".rda" =,
+            ".rdata" =,
+            ".Rdata" =,
             ".RData" = .self$get.rdata(x),
             ".csv" = .self$get.csv(x),
             ".txt" = .self$get.txt(x)

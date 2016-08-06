@@ -29,6 +29,9 @@ and methods (aka "procedures") for all basic RCs.
 
 \item{\code{fields()}}{Lists the fields available in this object}
 
+\item{\code{get.args(function.name.pattern)}}{Lists the arguments in all the exclusive functions
+that match the pattern provided}
+
 \item{\code{get.conf(id = NULL, field = NULL)}}{Provides the entire configuration object, a vector of
 entries specified by id, or just a single entry
 specified by id and field.}
@@ -40,7 +43,7 @@ specified by id and field.}
 \item{\code{get.netcdf(fullpath, var.name = NULL)}}{Retrieves data from any netcdf file on disk and
 returns a list}
 
-\item{\code{get.rdata(fullpath)}}{Reads an .RData file and passes
+\item{\code{get.rdata(fullpath)}}{Reads an .RData or .rda file and passes
 its contents as a list}
 
 \item{\code{get.txt(fullpath)}}{Reads a .txt file and passes

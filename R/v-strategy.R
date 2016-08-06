@@ -30,6 +30,7 @@ setRefClass(
     construct = function() {
       "Constructor of virtual strategy"
 
+      callSuper()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -279,11 +280,95 @@ setRefClass(
       return(out)
     },
 
-    get.value = function(param.name){
+    get.value = function(param.name = NULL, long.name = NULL){
       "Shortcut function to retrieve a parameter value"
 
+      .self$parameters$get.value(param.name = param.name, long.name = long.name)
+    },
+
+    get.data = function(param.name = NULL,
+                        long.name = NULL,
+                        field.name = "value") {
+      "Shortcut function to retrieve parameter data"
+
       .self$parameters$get.data(param.name = param.name,
-                                field.name = "value")
+                                long.name = long.name,
+                                field.name = field.name)
+    },
+
+    get.graph = function() {
+      'Generates a Directed (Acyclic) Graph of model parameters'
+
+      arg.list <- .self$get.args('get.compute.')
+      tos <- as.character(mapply(names(arg.list), FUN = function(x) {
+        strsplit(x, 'get.compute.')[[1]][2]
+      }))
+      froms <- unique(as.character(unlist(arg.list)))
+      unique.args <- unique(c(tos, froms))
+      types <- mapply(unique.args, FUN = function(a) {
+        .self$parameters$get.data(param.name = a, field.name = 'type')
+      })
+      nargs <- length(unique.args)
+      locate <- function(x) which(unique.args == x)
+      to.pos <- lapply(1:length(arg.list), FUN = function(k) {
+        rep(locate(tos[k]), length(arg.list[[k]]))
+      })
+      names(to.pos) <- tos
+      from.pos <- lapply(1:length(arg.list), FUN = function(k) {
+        mapply(arg.list[[k]], FUN = locate)
+      })
+      names(from.pos) <- tos
+      pos.mat <- cbind(as.numeric(unlist(to.pos)), as.numeric(unlist(from.pos)))
+      m <- matrix(0, nargs, nargs, dimnames = list(to = unique.args,
+                                                   from = unique.args))
+      m[pos.mat] <- 1
+      out <- list(names = unique.args,
+                  types = types,
+                  to.pos = to.pos,
+                  from.pos = from.pos,
+                  dependency.matrix = m)
+    },
+
+    get.ordered.graph = function() {
+      "Provides a graph whose nodes have been topologically sorted according to
+      Kanh's algorithm.
+      Useful to design the update order of a model fitting algorithm.
+      https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm"
+
+      gr <- .self$get.graph()
+      mat <- gr$dependency.matrix
+      nargs <- length(gr$names)
+      i <- 1
+      L <- rep(NA, nargs)
+      S <- which(rowSums(mat) == 0)
+      while (length(S) > 0) {
+        n <- S[1]
+        S <- if (length(S) > 1) S[2:length(S)] else NULL
+        L[i] <- n
+        i <- i + 1
+        m <- which(mat[, n] == 1)
+        if (length(m) > 0) {
+          mat[m, n] <- 0
+          p <- if(length(m) > 1) (rowSums(mat[m, ]) == 0) else (sum(mat[m, ]) == 0)
+          if (sum(p) > 0) S <- c(S, m[p])
+        }
+      }
+      is.dag <- ((i - 1) == nargs)
+      stopifnot(is.dag)
+      R <- mapply(1:nargs, FUN = function(k) which(L == k))
+      relocate <- function(x) mapply(x, FUN = function(v) R[v])
+      to.pos <- lapply(gr$to.pos, FUN = relocate)
+      from.pos <- lapply(gr$from.pos, FUN = relocate)
+      pos.mat <- cbind(unlist(to.pos), unlist(from.pos))
+      m <- matrix(0, nargs, nargs, dimnames = list(to = gr$names[L],
+                                                   from = gr$names[L]))
+      m[pos.mat] <- 1
+      graph <- list(names = gr$names[L],
+                    types = gr$types[L],
+                    to.pos = to.pos,
+                    from.pos = from.pos,
+                    dependency.matrix = m)
+      return(graph)
     },
 
     # ------------------------------------------------------
