@@ -11,6 +11,11 @@ This is a virtual Reference Class for plotter RCs
 This RC contains fields (a.k.a. "attributes") and methods
 (a.k.a. "procedures") for that any plotter RC must have.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{shiny.app}}{ANY. Shiny app to visualize model}
+}}
 \section{Methods}{
 
 \describe{

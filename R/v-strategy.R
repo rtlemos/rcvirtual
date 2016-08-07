@@ -18,6 +18,8 @@ setRefClass(
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(
     parameters = "rcvirtual.parameters",
+    graph = "list",
+    shiny.app = 'ANY',
     fit.counter = "numeric",
     model.res = "list",
     model.fitted = "logical"),
@@ -31,6 +33,7 @@ setRefClass(
       "Constructor of virtual strategy"
 
       callSuper()
+      .self$graph <- .self$get.ordered.graph()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -139,6 +142,20 @@ setRefClass(
 
     set.initial = function() {
       "Empty function. Populate with offspring methods"
+    },
+
+    set.compute = function(param.name, update.timestamp = TRUE) {
+
+      parents <- names(which(.self$graph$dependency.matrix[param.name,] == 1))
+      redundant <- .self$parameters$is.redundant.calculation(
+        param.name = param.name, parent.names = parents)
+      if (!redundant) {
+        pstring <- paste0(parents, collapse = ',')
+        fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
+        objs <- eval(parse(text = fstring))
+      }
+      .self$set.value(param.name = param, objs = objs,
+                      update.timestamp = update.timestamp)
     },
 
     # ------------------------------------------------------
@@ -363,12 +380,12 @@ setRefClass(
       m <- matrix(0, nargs, nargs, dimnames = list(to = gr$names[L],
                                                    from = gr$names[L]))
       m[pos.mat] <- 1
-      graph <- list(names = gr$names[L],
-                    types = gr$types[L],
-                    to.pos = to.pos,
-                    from.pos = from.pos,
-                    dependency.matrix = m)
-      return(graph)
+      gr2 <- list(names = gr$names[L],
+                  types = gr$types[L],
+                  to.pos = to.pos,
+                  from.pos = from.pos,
+                  dependency.matrix = m)
+      return(gr2)
     },
 
     # ------------------------------------------------------

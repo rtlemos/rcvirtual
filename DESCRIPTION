@@ -20,9 +20,9 @@ Collate:
     v-gui-conf.R
     v-netcdf.R
     v-parameters.R
+    v-strategy.R
     v-plotter.R
     v-ggplotter.R
-    v-strategy.R
     v-factory.R
     v-random.R
     v-daemon.R

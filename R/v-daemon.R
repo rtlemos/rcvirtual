@@ -60,7 +60,7 @@ setRefClass(
       if (use.gui) {
         gui.name <- paste0(package, '.guiconf')
         gg <- get(gui.name)$new(uconf = uconf)
-        uconf <- gg$launch.app()
+        uconf <- gg$shiny()
       }
 
       # finilizing this daemon's setup, by calling the Basic setup
@@ -89,9 +89,10 @@ setRefClass(
         object.name = plotter.name,
         conf = uconf$plotter)
 
-      # linking parameters to strategy and plotter
+      # linking parameters, strategy, and plotter
       .self$strategy$parameters <- .self$parameters
       .self$plotter$parameters <- .self$parameters
+      .self$plotter$strategy <- .self$strategy
 
       # moving data sets in package to *.Rdata objects in tempdir()
       for (obj in as.character(data(package = package)$results[, "Item"])) {
@@ -114,6 +115,8 @@ setRefClass(
       .self$parameters$construct()
       if (where.stop == "parameters") return()
       .self$strategy$construct()
+      if (where.stop == "strategy") return()
+      .self$plotter$construct()
 
     },
 
@@ -141,12 +144,13 @@ setRefClass(
     # ------------------------------------------------------
     # Plotting methods -------------------------------------
     # ------------------------------------------------------
-    graphplot = function(highlight.node.name = NULL, highlight.edges = 'to') {
+    graphplot = function(highlight.node.name = NULL, highlight.edges = 'to',
+                         col = NULL) {
       'Plot a graph of model parameters, highlighting a particular node
       and any edges that point to/from it'
 
-      graph <- .self$strategy$get.ordered.graph()
-      .self$plotter$graphplot(graph, highlight.node.name, highlight.edges)
+      .self$plotter$graphplot(.self$strategy$graph,
+                              highlight.node.name, highlight.edges, col)
       .self$plotter$get.buffer.plot()
     },
 

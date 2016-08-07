@@ -26,7 +26,7 @@ setRefClass(
                                   server = .self$get.server())
     },
 
-    launch.app = function(){
+    shiny = function(){
       runApp(appDir = .self$shiny.app)
       return(.self$uconf)
     },

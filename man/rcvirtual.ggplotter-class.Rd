@@ -18,7 +18,7 @@ ggplots of data.
 \item{\code{density.plot(out, mytitle, dolegend = TRUE, xpos = 1, ypos = 1)}}{Plots the posterior density of >= 1 model parameters}
 
 \item{\code{graphplot(graph, highlight.node.name = NULL, highlight.edges = "to",
-  xpos = 1, ypos = 1)}}{Plot a graph and highlight a node and edges pointing to/from it}
+  col = NULL, xpos = 1, ypos = 1, do.plot = FALSE)}}{Plot a graph and highlight a node and edges pointing to/from it}
 
 \item{\code{lineplot(specs, xpos = 1, ypos = 1)}}{Multiple line plot}
 

@@ -5,6 +5,8 @@
 #' This RC contains fields (a.k.a. "attributes") and methods
 #' (a.k.a. "procedures") for that any plotter RC must have.
 #'
+#' @field shiny.app ANY. Shiny app to visualize model
+#'
 #' @import grid
 #' @importFrom methods new
 #' @exportClass rcvirtual.plotter
@@ -16,7 +18,9 @@ setRefClass(
     buffer = "matrix",
     palettes = "list",
     default.palettes = "list",
-    parameters = "rcvirtual.parameters"),
+    shiny.app = 'ANY',
+    parameters = "rcvirtual.parameters",
+    strategy = "rcvirtual.strategy"),
   methods = list(
 
     # ------------------------------------------------------
@@ -45,7 +49,10 @@ setRefClass(
         neg.zero.pos =
           .self$default.palettes$neg.zero.pos,
         zero.pos = .self$default.palettes$zero.pos
+
       )
+      .self$shiny.app <- shinyApp(ui = .self$get.ui(),
+                                  server = .self$get.server())
     },
 
     construct.layer = function(type = NULL, df = NULL,
@@ -81,6 +88,10 @@ setRefClass(
         }
       }
       return(ly)
+    },
+
+    shiny = function() {
+      runApp(appDir = .self$shiny.app)
     },
 
     # ------------------------------------------------------
@@ -402,11 +413,78 @@ setRefClass(
       .self$surfaceplot2(base = base, under = under,
                          main = main, top = top,
                          xpos = xpos, ypos = ypos)
+    },
+
+    get.server = function() {
+      function(input, output, session) {
+        observe({
+          updateSelectizeInput(
+            session, "highlight.node.name",
+            choices = .self$strategy$graph$names, server = TRUE)
+          if(input$exit.button > 0) stopApp()
+        })
+        output$dag <- renderPlot({.self$graphplot(
+          .self$strategy$graph,
+          input$highlight.node.name,
+          input$highlight.edges,
+          col = c('black',
+                  ifelse(input$hide.fixed, 'white', 'azure2'),
+                  'firebrick2'),
+          do.plot = TRUE)
+        })
+      }
+    },
+
+    get.ui = function() {
+      navbarPage(
+        title = 'RC Plotter',
+        tabPanel(
+          'Daemon'
+        ),
+        tabPanel(
+          'Strategy',
+          fluidPage(
+            fluidRow(
+              column(
+                2,
+                selectizeInput(
+                  inputId = "highlight.node.name",
+                  label = "Highlight parameter",
+                  multiple  = FALSE,
+                  choices = NULL
+                ),
+                selectizeInput(
+                  inputId = "highlight.edges",
+                  label = "Highlight edges",
+                  multiple  = FALSE,
+                  choices = c('from', 'to')
+                ),
+                checkboxInput("hide.fixed",
+                              label = "Hide constants", value = FALSE),
+                br(),
+                actionButton("exit.button", "Exit",
+                             icon("paper-plane"),
+                             style = paste0("color: #fff; background-color: ",
+                                            "#337ab7; border-color: #2e6da4"))
+              ),
+              column(
+                10,
+                plotOutput('dag')
+              )
+            )
+          )
+        ),
+        tabPanel(
+          'Plotter'
+        ),
+        tabPanel(
+          'Parameters'
+        )
+      )
     }
 
     # ------------------------------------------------------
     # Is methods -------------------------------------------
     # ------------------------------------------------------
-
-)
+  )
 )

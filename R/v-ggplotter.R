@@ -669,26 +669,32 @@ setRefClass(
     },
 
     graphplot = function(graph, highlight.node.name = NULL,
-                         highlight.edges = 'to', xpos = 1, ypos = 1) {
+                         highlight.edges = 'to',
+                         col = NULL, xpos = 1, ypos = 1, do.plot = FALSE) {
       'Plot a graph and highlight a node and edges pointing to/from it'
 
       nargs <- length(graph$names)
+      if (is.null(col)) col <- c('black', 'azure2', 'firebrick2')
       x <- sin(2 * pi * (0:(nargs - 1)) / nargs)
       y <- cos(2 * pi * (0:(nargs - 1)) / nargs)
       from.pos <- as.numeric(unlist(graph$from.pos))
       to.pos <- as.numeric(unlist(graph$to.pos))
-      df <- data.frame(x = x, y = y, z = graph$names, stringsAsFactors = FALSE)
-      df.arrows <- data.frame(xarrow.start = 0.95 * x[from.pos],
+      df <- data.frame(x = x, y = y, types = graph$types,
+                       z = graph$names, stringsAsFactors = FALSE)
+      df.arrows <- data.frame(types = df$types[from.pos],
+                              xarrow.start = 0.95 * x[from.pos],
                               yarrow.start = 0.95 * y[from.pos],
                               xarrow.end = 0.95 * x[to.pos],
                               yarrow.end = 0.95 * y[to.pos])
       if (is.null(highlight.node.name)) {
         my.node <- my.edges <- NULL
+      } else if (!(highlight.node.name %in% df$z)) {
+        my.node <- my.edges <- NULL
       } else {
-        stopifnot(highlight.node.name %in% df$z)
         id <- which(df$z == highlight.node.name)
-        my.node <- geom_text(data = df[df$z == highlight.node.name, ],
-                             aes(x = x, y = y, label = z, colour = 'red'))
+        my.node <- ggplot2::geom_text(
+          data = df[df$z == highlight.node.name, ],
+          ggplot2::aes(x = x, y = y, label = z, colour = col[3]))
         my.df <- switch(
           highlight.edges,
           'from' = df.arrows[df.arrows$xarrow.start == 0.95 * x[id] &
@@ -696,25 +702,40 @@ setRefClass(
           'to' = df.arrows[df.arrows$xarrow.end == 0.95 * x[id] &
                              df.arrows$yarrow.end == 0.95 * y[id], ]
         )
-        my.edges <- geom_segment(
+        my.edges <- ggplot2::geom_segment(
           data = my.df,
-          mapping = aes(x = xarrow.start, y = yarrow.start,
+          mapping = ggplot2::aes(x = xarrow.start, y = yarrow.start,
                         xend = xarrow.end, yend = yarrow.end),
-          arrow = arrow(type = 'closed', length = unit(0.02, "npc")),
-          colour = 'red')
+          arrow = ggplot2::arrow(type = 'closed',
+                                 length = ggplot2::unit(0.02, "npc")),
+          colour = col[3])
       }
-      p <- ggplot(df, aes(x = x, y = y)) +
-        theme_void() + theme(legend.position = "none") +
-        geom_text(data = df[df$types == 'fixed', ], aes(label = z),
-                  colour = 'gray') +
-        geom_text(data = df[df$types != 'fixed', ], aes(label = z)) +
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
+        ggplot2::theme_void() +
+        ggplot2::theme(legend.position = "none") +
+        ggplot2::geom_text(data = df[df$types == 'fixed', ],
+                           ggplot2::aes(label = z),
+                           colour = col[2]) +
+        ggplot2::geom_text(data = df[df$types != 'fixed', ],
+                           ggplot2::aes(label = z),
+                           colour = col[1]) +
         my.node +
-        geom_segment(data = df.arrows,
-                     mapping = aes(x = xarrow.start, y = yarrow.start,
-                                   xend = xarrow.end, yend = yarrow.end),
-                     arrow = arrow(type = 'closed', length = unit(0.02, "npc"))) +
+        ggplot2::geom_segment(
+          data = df.arrows[df.arrows$types == 'fixed', ],
+          mapping = ggplot2::aes(x = xarrow.start, y = yarrow.start,
+                        xend = xarrow.end, yend = yarrow.end),
+          arrow = ggplot2::arrow(type = 'closed',
+                                 length = ggplot2::unit(0.02, "npc")),
+          colour = col[2]) +
+        ggplot2::geom_segment(
+          data = df.arrows[df.arrows$types != 'fixed', ],
+          mapping = ggplot2::aes(x = xarrow.start, y = yarrow.start,
+                                 xend = xarrow.end, yend = yarrow.end),
+          arrow = ggplot2::arrow(type = 'closed',
+                                 length = ggplot2::unit(0.02, "npc")),
+          colour = col[1]) +
         my.edges
-      .self$set.in.buffer(p, xpos, ypos)
+      if (do.plot) p else .self$set.in.buffer(p, xpos, ypos)
     }
   )
   )
