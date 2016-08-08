@@ -18,7 +18,7 @@ setRefClass(
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(
     parameters = "rcvirtual.parameters",
-    graph = "list",
+    graph = "matrix",
     shiny.app = 'ANY',
     fit.counter = "numeric",
     model.res = "list",
@@ -33,7 +33,7 @@ setRefClass(
       "Constructor of virtual strategy"
 
       callSuper()
-      .self$graph <- .self$get.ordered.graph()
+      .self$graph <- .self$get.graph()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -141,21 +141,42 @@ setRefClass(
     },
 
     set.initial = function() {
-      "Empty function. Populate with offspring methods"
+      "Initialize parameters; initialization order is based on graph"
+
+      npar <- nrow(.self$graph)
+      pnames <- dimnames(.self$graph)[[1]]
+      for (param.name in pnames) {
+        .self$set.compute(param.name)
+      }
     },
 
     set.compute = function(param.name, update.timestamp = TRUE) {
 
-      parents <- names(which(.self$graph$dependency.matrix[param.name,] == 1))
+      parents <- names(which(.self$graph[param.name,] == 1))
       redundant <- .self$parameters$is.redundant.calculation(
         param.name = param.name, parent.names = parents)
-      if (!redundant) {
-        pstring <- paste0(parents, collapse = ',')
+      if (redundant) {
+
+      } else {
+        pvec <- mapply(parents, FUN = function(p) {
+          paste0(p, " = .self$get.value('", p, "')")
+        })
+        pstring <- paste0(pvec, collapse = ',')
         fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
         objs <- eval(parse(text = fstring))
+        #
+        #RTL TODO: replace below with a DISTR test
+        #
+        if (is.list(objs)) {
+          if (names(objs)[1] == 'type') {
+            if (objs$type == 'unknown') {
+              objs <- runif(1)
+            }
+          }
+        }
+        .self$set.value(param.name = param.name, objs = objs,
+                        update.timestamp = update.timestamp)
       }
-      .self$set.value(param.name = param, objs = objs,
-                      update.timestamp = update.timestamp)
     },
 
     # ------------------------------------------------------
@@ -314,47 +335,47 @@ setRefClass(
     },
 
     get.graph = function() {
-      'Generates a Directed (Acyclic) Graph of model parameters'
+      'Generates a sorted Directed Acyclic Graph of model parameters'
 
+      # Getting list of parameters and their dependencies (aka parents)
       arg.list <- .self$get.args('get.compute.')
       tos <- as.character(mapply(names(arg.list), FUN = function(x) {
         strsplit(x, 'get.compute.')[[1]][2]
       }))
+      names(arg.list) <- tos
       froms <- unique(as.character(unlist(arg.list)))
-      unique.args <- unique(c(tos, froms))
-      types <- mapply(unique.args, FUN = function(a) {
-        .self$parameters$get.data(param.name = a, field.name = 'type')
-      })
-      nargs <- length(unique.args)
-      locate <- function(x) which(unique.args == x)
-      to.pos <- lapply(1:length(arg.list), FUN = function(k) {
-        rep(locate(tos[k]), length(arg.list[[k]]))
-      })
-      names(to.pos) <- tos
-      from.pos <- lapply(1:length(arg.list), FUN = function(k) {
-        mapply(arg.list[[k]], FUN = locate)
-      })
-      names(from.pos) <- tos
-      pos.mat <- cbind(as.numeric(unlist(to.pos)), as.numeric(unlist(from.pos)))
-      m <- matrix(0, nargs, nargs, dimnames = list(to = unique.args,
-                                                   from = unique.args))
-      m[pos.mat] <- 1
-      out <- list(names = unique.args,
-                  types = types,
-                  to.pos = to.pos,
-                  from.pos = from.pos,
-                  dependency.matrix = m)
-    },
-
-    get.ordered.graph = function() {
-      "Provides a graph whose nodes have been topologically sorted according to
-      Kanh's algorithm.
-      Useful to design the update order of a model fitting algorithm.
-      https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm"
-
-      gr <- .self$get.graph()
-      mat <- gr$dependency.matrix
-      nargs <- length(gr$names)
+      # Checking that all parents are parameters themselves
+      for (fr in froms) {
+        if (!(fr %in% tos)) {
+          stop(paste0('A function for parameter ', fr, ' has not been defined.'))
+        }
+      }
+      # Auxiliary function
+      generate.dependency.matrix <- function(mylist) {
+        nargs <- length(mylist)
+        mynames <- names(mylist)
+        locate <- function(x) which(mynames == x)
+        to.pos <- lapply(1:nargs, FUN = function(k) {
+          rep(locate(mynames[k]), length(mylist[[k]]))
+        })
+        from.pos <- lapply(1:nargs, FUN = function(k) {
+          mapply(mylist[[k]], FUN = locate)
+        })
+        pos.mat <- cbind(as.numeric(unlist(to.pos)),
+                         as.numeric(unlist(from.pos)))
+        m <- matrix(0, nargs, nargs, dimnames = list(to = mynames,
+                                                     from = mynames))
+        m[pos.mat] <- 1
+        return(m)
+      }
+      # Generating preliminary dependency matrix
+      mat <- generate.dependency.matrix(arg.list)
+      #
+      # Topologically sorting graph, according to Kahn's algorithm
+      # https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm
+      #
+      node.names <- dimnames(mat)[[1]]
+      nargs <- nrow(mat)
       i <- 1
       L <- rep(NA, nargs)
       S <- which(rowSums(mat) == 0)
@@ -364,28 +385,21 @@ setRefClass(
         L[i] <- n
         i <- i + 1
         m <- which(mat[, n] == 1)
-        if (length(m) > 0) {
+        len.m <- length(m)
+        if (len.m > 0) {
           mat[m, n] <- 0
-          p <- if(length(m) > 1) (rowSums(mat[m, ]) == 0) else (sum(mat[m, ]) == 0)
+          p <- if(len.m > 1) (rowSums(mat[m, ]) == 0) else (sum(mat[m, ]) == 0)
           if (sum(p) > 0) S <- c(S, m[p])
         }
       }
       is.dag <- ((i - 1) == nargs)
       stopifnot(is.dag)
-      R <- mapply(1:nargs, FUN = function(k) which(L == k))
-      relocate <- function(x) mapply(x, FUN = function(v) R[v])
-      to.pos <- lapply(gr$to.pos, FUN = relocate)
-      from.pos <- lapply(gr$from.pos, FUN = relocate)
-      pos.mat <- cbind(unlist(to.pos), unlist(from.pos))
-      m <- matrix(0, nargs, nargs, dimnames = list(to = gr$names[L],
-                                                   from = gr$names[L]))
-      m[pos.mat] <- 1
-      gr2 <- list(names = gr$names[L],
-                  types = gr$types[L],
-                  to.pos = to.pos,
-                  from.pos = from.pos,
-                  dependency.matrix = m)
-      return(gr2)
+      #
+      # Constructing a sorted list of parameters and its dependency matrix
+      new.list <- lapply(L, FUN = function(j) arg.list[[j]])
+      names(new.list) <- node.names[L]
+      new.mat <- generate.dependency.matrix(new.list)
+      return(new.mat)
     },
 
     # ------------------------------------------------------

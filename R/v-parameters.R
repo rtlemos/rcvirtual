@@ -230,7 +230,8 @@ setRefClass(
       idx1 <- .self$get.id(param.name = param.name)
       if (!.self$is.valid.parameter(param.name) |
           !.self$is.valid.field(field.name)) {
-        stop("Invalid parameter or field name.")
+        stop(paste("Invalid parameter name:", param.name,
+                   ", or field name:", field.name))
       }
       old <- .self[[field.name]][[param.name]]
       if (identical(old, objs)) {
@@ -280,7 +281,7 @@ setRefClass(
         if (length(type) > 0) {
           if (.self$verbose) {
             cat(paste0("Reading file for ", short.names[i],
-                "(", long.names[i], ")\n"))
+                " (", long.names[i], ")\n"))
           }
           dt <- switch(
             type,
@@ -836,7 +837,8 @@ setRefClass(
 
       my.timestamp <- .self$get.data(param.name = param.name,
                                      field.name = 'timestamp')
-      if (is.na(my.timestamp)) return(FALSE) #don't skip: not computed yet
+      if (length(my.timestamp) == 0) return(FALSE) #don't skip: not computed yet
+      if (is.na(my.timestamp)) return(FALSE) # ""
       if (length(parent.names) == 0) return(TRUE) #skip: no dependencies
       parent.timestamps <- mapply(parent.names, FUN = function(nm) {
         .self$get.data(param.name = nm, field.name = 'timestamp')

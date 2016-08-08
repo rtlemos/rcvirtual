@@ -420,7 +420,7 @@ setRefClass(
         observe({
           updateSelectizeInput(
             session, "highlight.node.name",
-            choices = .self$strategy$graph$names, server = TRUE)
+            choices = dimnames(.self$strategy$graph)[[1]], server = TRUE)
           if(input$exit.button > 0) stopApp()
         })
         output$dag <- renderPlot({.self$graphplot(

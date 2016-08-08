@@ -102,7 +102,7 @@ setRefClass(
       load(fullpath)
       nm <- objects()
       nm <- nm[nm != "fullpath"]
-      out <- lapply(nm, FUN = function(x) get(x))
+      out <- lapply(nm, FUN = function(x) eval(get(x)))
       if (length(nm) == 1) {
         out <- out[[1]]
       } else {

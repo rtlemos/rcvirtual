@@ -96,7 +96,7 @@ setRefClass(
 
       # moving data sets in package to *.Rdata objects in tempdir()
       for (obj in as.character(data(package = package)$results[, "Item"])) {
-        save(obj, file = paste0(tempdir(), '/', obj, '.RData'))
+        save(list = obj, file = paste0(tempdir(), '/', obj, '.RData'))
       }
 
       # If autoconstruct = TRUE, proceed to constructing daemon and dependencies

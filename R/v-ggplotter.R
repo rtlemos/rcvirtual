@@ -673,7 +673,7 @@ setRefClass(
                          col = NULL, xpos = 1, ypos = 1, do.plot = FALSE) {
       'Plot a graph and highlight a node and edges pointing to/from it'
 
-      nargs <- length(graph$names)
+      nargs <- nrow(graph)
       if (is.null(col)) col <- c('black', 'azure2', 'firebrick2')
       x <- sin(2 * pi * (0:(nargs - 1)) / nargs)
       y <- cos(2 * pi * (0:(nargs - 1)) / nargs)
