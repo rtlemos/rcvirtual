@@ -425,6 +425,7 @@ setRefClass(
         })
         output$dag <- renderPlot({.self$graphplot(
           .self$strategy$graph,
+          .self$parameters$type,
           input$highlight.node.name,
           input$highlight.edges,
           col = c('black',

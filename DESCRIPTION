@@ -19,7 +19,6 @@ Collate:
     v-conf.R
     v-gui-conf.R
     v-netcdf.R
-    v-parameters.R
     v-strategy.R
     v-plotter.R
     v-ggplotter.R

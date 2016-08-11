@@ -26,6 +26,7 @@ setRefClass(
     value = "list",
     count = "list",
     mean = "list",
+    type = "list", #RTL new
     variance = "list",
     diff = "list",
     size = "list",
@@ -228,11 +229,8 @@ setRefClass(
       # objs = list of objs to be stored
 
       idx1 <- .self$get.id(param.name = param.name)
-      if (!.self$is.valid.parameter(param.name) |
-          !.self$is.valid.field(field.name)) {
-        stop(paste("Invalid parameter name:", param.name,
-                   ", or field name:", field.name))
-      }
+      stopifnot(.self$is.valid.parameter(param.name))
+      stopifnot(.self$is.valid.field(field.name))
       old <- .self[[field.name]][[param.name]]
       if (identical(old, objs)) {
         return() #no update
@@ -275,16 +273,16 @@ setRefClass(
 
       for (i in 1:n.data) {
         x <- file.names[i]
-        type <- exts[which(mapply(exts, FUN = function(ext){
+        ty <- exts[which(mapply(exts, FUN = function(ext){
           mytest(x = x, ext = ext)
         }))]
-        if (length(type) > 0) {
+        if (length(ty) > 0) {
           if (.self$verbose) {
             cat(paste0("Reading file for ", short.names[i],
                 " (", long.names[i], ")\n"))
           }
           dt <- switch(
-            type,
+            ty,
             ".rda" =,
             ".rdata" =,
             ".Rdata" =,

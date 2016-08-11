@@ -149,7 +149,7 @@ setRefClass(
       'Plot a graph of model parameters, highlighting a particular node
       and any edges that point to/from it'
 
-      .self$plotter$graphplot(.self$strategy$graph,
+      .self$plotter$graphplot(.self$strategy$graph, .self$parameters$type,
                               highlight.node.name, highlight.edges, col)
       .self$plotter$get.buffer.plot()
     },

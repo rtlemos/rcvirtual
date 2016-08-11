@@ -668,7 +668,7 @@ setRefClass(
       .self$set.in.buffer(myplot, xpos, ypos)
     },
 
-    graphplot = function(graph, highlight.node.name = NULL,
+    graphplot = function(graph, ptypes, highlight.node.name = NULL,
                          highlight.edges = 'to',
                          col = NULL, xpos = 1, ypos = 1, do.plot = FALSE) {
       'Plot a graph and highlight a node and edges pointing to/from it'
@@ -677,12 +677,16 @@ setRefClass(
       if (is.null(col)) col <- c('black', 'azure2', 'firebrick2')
       x <- sin(2 * pi * (0:(nargs - 1)) / nargs)
       y <- cos(2 * pi * (0:(nargs - 1)) / nargs)
-      from.pos <- as.numeric(unlist(graph$from.pos))
-      to.pos <- as.numeric(unlist(graph$to.pos))
-      df <- data.frame(x = x, y = y, types = graph$types,
-                       z = graph$names, stringsAsFactors = FALSE)
-      df.arrows <- data.frame(types = df$types[from.pos],
-                              xarrow.start = 0.95 * x[from.pos],
+      to.pos <- as.numeric(unlist(lapply(1:nargs, FUN = function(k) {
+        rep(k, sum(graph[k,] == 1))
+      })))
+
+      from.pos <- as.numeric(unlist(lapply(1:nargs, FUN = function(k) {
+        which(graph[k,] == 1)
+      })))
+      df <- data.frame(x = x, y = y, types = ptypes,
+                       z = dimnames(graph)[[1]], stringsAsFactors = FALSE)
+      df.arrows <- data.frame(xarrow.start = 0.95 * x[from.pos],
                               yarrow.start = 0.95 * y[from.pos],
                               xarrow.end = 0.95 * x[to.pos],
                               yarrow.end = 0.95 * y[to.pos])
@@ -705,7 +709,7 @@ setRefClass(
         my.edges <- ggplot2::geom_segment(
           data = my.df,
           mapping = ggplot2::aes(x = xarrow.start, y = yarrow.start,
-                        xend = xarrow.end, yend = yarrow.end),
+                                 xend = xarrow.end, yend = yarrow.end),
           arrow = ggplot2::arrow(type = 'closed',
                                  length = ggplot2::unit(0.02, "npc")),
           colour = col[3])
@@ -723,7 +727,7 @@ setRefClass(
         ggplot2::geom_segment(
           data = df.arrows[df.arrows$types == 'fixed', ],
           mapping = ggplot2::aes(x = xarrow.start, y = yarrow.start,
-                        xend = xarrow.end, yend = yarrow.end),
+                                 xend = xarrow.end, yend = yarrow.end),
           arrow = ggplot2::arrow(type = 'closed',
                                  length = ggplot2::unit(0.02, "npc")),
           colour = col[2]) +

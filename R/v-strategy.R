@@ -34,6 +34,8 @@ setRefClass(
 
       callSuper()
       .self$graph <- .self$get.graph()
+      .self$set.initial()
+      .self$set.types()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -179,9 +181,101 @@ setRefClass(
       }
     },
 
+    set.types = function() {
+      'Guess the type of parameter from its value
+      TODO: use rcvirtual.random for unknown parameters'
+
+      pnames <- dimnames(.self$graph)[[1]]
+      for (param.name in pnames) {
+        obj <- .self$get.value(param.name)
+        #if (is(obj, 'rcvirtual.random')) {
+        #  my.type <- 'unknown'
+        #} else {
+        #  my.type <- 'derived'
+        #}
+        if (is.list(obj)) {
+          if (is.null(obj$type)) {
+            my.type <- 'derived'
+          } else {
+            my.type <- obj$type
+          }
+        } else {
+          my.type <- 'fixed'
+        }
+        .self$parameters$set.data(param.name = param.name, field.name = "type",
+                                  objs = my.type)
+      }
+    },
+
     # ------------------------------------------------------
     # Get methods ------------------------------------------
     # ------------------------------------------------------
+
+    get.dependencies = function(x) {
+      "Loads the dependencies of parameter x onto the global environment.
+      Use this to debug 'get.compute.x' functions"
+
+      args <- names(which(.self$graph[x, ] == 1))
+      for (myarg in args) {
+        z <- .self$get.value(myarg)
+        assign(myarg, z, pos = 1)
+      }
+      invisible()
+    },
+
+    get.time.formatted = function(tbounds.char, tstep = 'day', tz = 'GMT') {
+      "Function that formats time information: instants,
+      days, months, years, dates, starting instant and
+      ending instant."
+
+
+      #time instants; days since Jan 01, 1970
+      time.bounds <- as.POSIXlt(tbounds.char,
+                                origin = as.POSIXct('1970/01/01', tz = tz))
+      stopifnot(time.bounds[1] <= time.bounds[2])
+      if (tstep == "day" | tstep == "days") {
+        stp <- 60 ^ 2 * 24
+        n <- 1 + as.numeric(
+          difftime(time1 = time.bounds[2], time2 = time.bounds[1], tz = tz,
+                   units = 'days'))
+        inst <- seq(1, n, 1)
+        aux <- as.POSIXlt(seq(time.bounds[1], time.bounds[2], by = stp))
+        dd <- aux$mday
+        mm <- aux$mon + 1
+        yy <- 1900 + aux$year
+        ci <- mapply(1:n, FUN = function(i) {
+          out <- as.numeric(strftime(paste(yy[i], mm[i], dd[i], sep = "-"),
+                                     format = "%j"))
+        })
+      } else if (tstep == "month" | tstep == "months") {
+        n <- (time.bounds[2]$year - time.bounds[1]$year) * 12 +
+          time.bounds[2]$mon - time.bounds[1]$mon + 1
+        inst <- seq(1, n, 1)
+        dd <- rep(1, n)
+        mm <- (time.bounds[1]$mon + inst - 1) %% 12 + 1
+        yy <- 1900 + time.bounds[1]$year +
+          floor((time.bounds[1]$mon + inst - 1) / 12)
+        ci <- mm
+      } else if (tstep == "year" | tstep == "years") {
+        n <- time.bounds[2]$year - time.bounds[1]$year + 1
+        inst <- seq(1, n, 1)
+        dd <- rep(1, n)
+        mm <- rep(1, n)
+        yy <- 1900 + seq(time.bounds[1]$year, time.bounds[2]$year)
+        ci <- rep(1, n)
+      } else {
+        stop("Timestep not recognized:", tstep)
+      }
+      dt <- as.POSIXlt(mapply(yy, mm, dd, FUN = function(y, m, d) {
+        paste(y, m, d, sep = "/")
+      }), tz = tz)
+      st <- 1 #first & last instants
+      en <- n
+      formatted.time <- list(
+        inst = inst, cyclical.inst = ci, dd = dd, mm = mm,
+        yy = yy, dt = dt, st = st, en = en)
+      return(formatted.time)
+    },
 
     get.imputation = function(Yall, f, Q, u){
       "Impute missing values from obs & forecasts.
