@@ -5,16 +5,16 @@
 \alias{rcvirtual.strategy-class}
 \title{Statistical model-fitting algorithms (strategy)}
 \description{
-This is a virtual Reference Class for strategy RCs
+This is a virtual Reference Class for strategy RCs.
 }
 \details{
 This RC contains fields (a.k.a. "attributes") and methods
-(a.k.a. "procedures") for that any strategy RC must have.
+(a.k.a. "procedures") to fit statistical models.
 }
 \section{Fields}{
 
 \describe{
-\item{\code{parameters}}{rcvirtual.parameters. Parameters used by strategy.}
+\item{\code{parameters}}{list. Parameters used by strategy.}
 
 \item{\code{fit.counter}}{numeric. Iteration counter}
 
@@ -27,9 +27,12 @@ This RC contains fields (a.k.a. "attributes") and methods
 \describe{
 \item{\code{construct()}}{Construct basic objects}
 
-\item{\code{get.data(param.name = NULL, long.name = NULL, field.name = "value")}}{Shortcut function to retrieve parameter data}
+\item{\code{get.bounds(param.name = "latitude")}}{Provides the bounds for a given parameter}
 
-\item{\code{get.graph()}}{Generates a sorted Directed Acyclic Graph of model parameters}
+\item{\code{get.data(param.name, field.name = "value")}}{Retrieve parameter data}
+
+\item{\code{get.dependencies(x)}}{Loads the dependencies of parameter x onto the global environment.
+Use this to debug 'get.compute.x' functions}
 
 \item{\code{get.imputation(Yall, f, Q, u)}}{Impute missing values from obs & forecasts.
 Yall: vector with some NAs (missing values);
@@ -40,23 +43,34 @@ output: list with indices of NAs and imputed values}
 
 \item{\code{get.log.likelihood(summarized = TRUE)}}{Returns the log likelihood for a parameter vector}
 
-\item{\code{get.value(param.name = NULL, long.name = NULL)}}{Shortcut function to retrieve a parameter value}
+\item{\code{get.time.formatted(tbounds.char, tstep = "day", tz = "GMT")}}{Function that formats time information: instants,
+days, months, years, dates, starting instant and
+ending instant.}
+
+\item{\code{get.value(param.name)}}{Shortcut function to retrieve a parameter value}
 
 \item{\code{is.model.fitted()}}{Check if the model has been fitted}
 
-\item{\code{is.valid()}}{Function that checks if strategy is valid.}
+\item{\code{is.parameter(param.name)}}{Function that checks if param.name is among the list of parameters}
+
+\item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL)}}{Should a derived quantity be recomputed?}
 
 \item{\code{set.advance.counter()}}{Advances the strategy's model fitting counter}
 
-\item{\code{set.initial()}}{Initialize parameters; initialization order is based on graph}
+\item{\code{set.data(param.name, field, obj, update.timestamp = TRUE)}}{Store an object in a parameter}
 
-\item{\code{set.log.likelihood()}}{Runs the forward filter and sets the likelihood}
+\item{\code{set.graph()}}{Generates a sorted Directed Acyclic Graph of model parameters}
 
 \item{\code{set.optimize(mle = TRUE)}}{Compute maximum likelihood estimates (MLE) or
 maximum a posteriori estimates (MAP) of unknown model
 parameters}
 
-\item{\code{set.value(param.name, objs, update.timestamp = TRUE)}}{Store an object as a parameter}
+\item{\code{set.parameters()}}{Constructs a list of parameters required to fit a model}
+
+\item{\code{set.types()}}{Guess the type of parameter from its value
+TODO: use rcvirtual.random for unknown parameters}
+
+\item{\code{set.value(param.name, obj, update.timestamp = TRUE)}}{Shortcut function to store an object in a parameter}
 
 \item{\code{test.log.likelihood(unk.parvals, unk.parameters, advance.counter = FALSE,
   summarized = TRUE)}}{Sets the log-likelihood based on

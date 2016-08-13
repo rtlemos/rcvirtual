@@ -5,6 +5,7 @@
 #' This RC contains fields (a.k.a. "attributes") and methods
 #' (a.k.a. "procedures") for that any factory RC must have.
 #'
+#' @include v-basic.R
 #' @importFrom methods new
 #' @exportClass rcvirtual.factory
 #'

@@ -7,25 +7,12 @@ Authors@R: person("Ricardo", "T. Lemos",
            email = "rtl00@yahoo.com",
            role = c("aut", "cre"))
 Description: This package contains a set of reference classes for statistical
-    modelling with R. These classes are called "virtual", in the sense that
-    they are designed to set the wireframe for other, "concrete" classes, that
-    implement a specific statistical model. After installing,
-    type the following to get started: > vignette('rcvirtual-vignette', package = 'rcvirtual')
-License:
-    file LICENSE
+    modelling with R. These classes are called "virtual", in the sense that they are
+    designed to set the wireframe for other, "concrete" classes, that implement a
+    specific statistical model. After installing, type the following to get started:
+    > vignette('rcvirtual-vignette', package = 'rcvirtual')
+License: file LICENSE
 LazyData: true
-Collate:
-    v-basic.R
-    v-conf.R
-    v-gui-conf.R
-    v-netcdf.R
-    v-strategy.R
-    v-plotter.R
-    v-ggplotter.R
-    v-factory.R
-    v-random.R
-    v-daemon.R
-    v-package.R
 Imports:
     methods,
     rcrandom,
@@ -39,3 +26,21 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
+Collate:
+    'v-basic.R'
+    'd-Constant.R'
+    'd-Derived.R'
+    'd-random.R'
+    'd-GaussianState.R'
+    'd-InverseGamma.R'
+    'd-Normal.R'
+    'd-Time.R'
+    'd-Uniform.R'
+    'v-strategy.R'
+    'v-plotter.R'
+    'v-daemon.R'
+    'v-factory.R'
+    'v-ggplotter.R'
+    'v-netcdf.R'
+    'v-package.R'
+    'v-random.R'

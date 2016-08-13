@@ -9,13 +9,11 @@ This is a virtual Reference Class for concrete daemon RCs
 }
 \details{
 This RC contains fields (a.k.a. "attributes") and methods
-(a.k.a. "procedures") for that any daemon RC must have.
+(a.k.a. "procedures") that any daemon RC must have.
 }
 \section{Fields}{
 
 \describe{
-\item{\code{parameters.}}{Parameters object}
-
 \item{\code{strategy.}}{Strategy object}
 
 \item{\code{plotter.}}{Plotter object}
