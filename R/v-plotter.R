@@ -8,6 +8,7 @@
 #' @field shiny.app ANY. Shiny app to visualize model
 #'
 #' @import grid
+#' @include v-basic.R v-strategy.R
 #' @importFrom methods new
 #' @exportClass rcvirtual.plotter
 #'
@@ -19,7 +20,6 @@ setRefClass(
     palettes = "list",
     default.palettes = "list",
     shiny.app = 'ANY',
-    parameters = "rcvirtual.parameters",
     strategy = "rcvirtual.strategy"),
   methods = list(
 
@@ -51,8 +51,8 @@ setRefClass(
         zero.pos = .self$default.palettes$zero.pos
 
       )
-      .self$shiny.app <- shinyApp(ui = .self$get.ui(),
-                                  server = .self$get.server())
+      .self$shiny.app <- shiny::shinyApp(ui = .self$get.ui(),
+                                         server = .self$get.server())
     },
 
     construct.layer = function(type = NULL, df = NULL,
@@ -91,7 +91,7 @@ setRefClass(
     },
 
     shiny = function() {
-      runApp(appDir = .self$shiny.app)
+      shiny::runApp(appDir = .self$shiny.app)
     },
 
     # ------------------------------------------------------
@@ -194,12 +194,15 @@ setRefClass(
     get.domain.plot = function(){
       "Plots the region of interest"
 
+      latb <- .self$strategy$get.bounds('latitude')
+      lonb <- .self$strategy$get.bounds('latitude')
+
+      if (is.null(lat) | is.null(lon)) {
+        stop('latitude and/or longitude not found')
+      }
       mystates <- .self$get.state.layer(
-        specs = list(
-          latb = .self$parameters$get.value(
-            long.name = "latitude"),
-          lonb = .self$parameters$get.value(
-            long.name = "latitude")))
+        specs = list(latb = c(min(lat), max(lat)),
+                     lonb = c(min(lon), max(lon))))
       specs.plot <- list(under.data = "state",
                          main.data = mystates$names,
                          top.data = mystates$rect,
@@ -303,9 +306,9 @@ setRefClass(
                   z.name = mydata,
                   include.z = myspecs$include.z,
                   bounds = list(
-                    lon = .self$parameters$get.lon.bounds(),
-                    lat = .self$parameters$get.lat.bounds(),
-                    time = .self$parameters$get.time.bounds()
+                    lon = .self$strategy$get.bounds('longitude'),
+                    lat = .self$parameters$get.bounds('latitude'),
+                    time = .self$parameters$get.bounds('time')
                   )
                 )),
               NULL
@@ -315,7 +318,7 @@ setRefClass(
                      mydata == "county") {
             mylayer <- .self$construct.layer(type = mydata)
           } else {
-            dt <- .self$parameters$get.value(mydata)
+            dt <- .self$strategy$get.value(param.name = mydata)
             if (any(names(dt) == "longitude")) {
               myz <- as.numeric(t(dt[[3]]))
               myl <- expand.grid(lon = dt$longitude,
@@ -417,15 +420,15 @@ setRefClass(
 
     get.server = function() {
       function(input, output, session) {
-        observe({
-          updateSelectizeInput(
+        shiny::observe({
+          shiny::updateSelectizeInput(
             session, "highlight.node.name",
             choices = dimnames(.self$strategy$graph)[[1]], server = TRUE)
-          if(input$exit.button > 0) stopApp()
+          if(input$exit.button > 0) shiny::stopApp()
         })
-        output$dag <- renderPlot({.self$graphplot(
+        output$dag <- shiny::renderPlot({.self$graphplot(
           .self$strategy$graph,
-          .self$parameters$type,
+          .self$strategy$get.parameter.types(),
           input$highlight.node.name,
           input$highlight.edges,
           col = c('black',
@@ -437,48 +440,48 @@ setRefClass(
     },
 
     get.ui = function() {
-      navbarPage(
+      shiny::navbarPage(
         title = 'RC Plotter',
-        tabPanel(
+        shiny::tabPanel(
           'Daemon'
         ),
-        tabPanel(
+        shiny::tabPanel(
           'Strategy',
-          fluidPage(
-            fluidRow(
-              column(
+          shiny::fluidPage(
+            shiny::fluidRow(
+              shiny::column(
                 2,
-                selectizeInput(
+                shiny::selectizeInput(
                   inputId = "highlight.node.name",
                   label = "Highlight parameter",
                   multiple  = FALSE,
                   choices = NULL
                 ),
-                selectizeInput(
+                shiny::selectizeInput(
                   inputId = "highlight.edges",
                   label = "Highlight edges",
                   multiple  = FALSE,
                   choices = c('from', 'to')
                 ),
-                checkboxInput("hide.fixed",
+                shiny::checkboxInput("hide.fixed",
                               label = "Hide constants", value = FALSE),
-                br(),
-                actionButton("exit.button", "Exit",
-                             icon("paper-plane"),
-                             style = paste0("color: #fff; background-color: ",
-                                            "#337ab7; border-color: #2e6da4"))
+                shiny::br(),
+                shiny::actionButton("exit.button", "Exit",
+                                    shiny::icon("paper-plane"),
+                                    style = paste0("color: #fff; background-color: ",
+                                                   "#337ab7; border-color: #2e6da4"))
               ),
-              column(
+              shiny::column(
                 10,
-                plotOutput('dag')
+                shiny::plotOutput('dag')
               )
             )
           )
         ),
-        tabPanel(
+        shiny::tabPanel(
           'Plotter'
         ),
-        tabPanel(
+        shiny::tabPanel(
           'Parameters'
         )
       )

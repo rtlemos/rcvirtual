@@ -23,6 +23,7 @@
 #' @field instants POSIXlt.
 #'
 #' @import ncdf4
+#' @include v-basic.R
 #' @importFrom methods new
 #' @exportClass rcvirtual.netcdf
 #'

@@ -22,12 +22,12 @@ setRefClass(
       stopifnot(is(uconf, 'rcvirtual.conf'))
       .self$previous.txt <- 'Enter text here'
       .self$uconf <- uconf
-      .self$shiny.app <- shinyApp(ui = .self$get.ui(),
-                                  server = .self$get.server())
+      .self$shiny.app <- shiny::shinyApp(ui = .self$get.ui(),
+                                         server = .self$get.server())
     },
 
     shiny = function(){
-      runApp(appDir = .self$shiny.app)
+      shiny::runApp(appDir = .self$shiny.app)
       return(.self$uconf)
     },
 

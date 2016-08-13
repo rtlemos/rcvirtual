@@ -5,6 +5,7 @@
 #' This RC contains fields (a.k.a. "attributes") and methods
 #' (a.k.a. "procedures") for that any random RC must have.
 #'
+#' @include v-basic.R
 #' @importFrom rcrandom rcrng
 #' @importFrom methods new
 #' @exportClass rcvirtual.random

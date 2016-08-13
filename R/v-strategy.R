@@ -1,15 +1,16 @@
 #' Statistical model-fitting algorithms (strategy)
 #'
-#' This is a virtual Reference Class for strategy RCs
+#' This is a virtual Reference Class for strategy RCs.
 #'
 #' This RC contains fields (a.k.a. "attributes") and methods
-#' (a.k.a. "procedures") for that any strategy RC must have.
+#' (a.k.a. "procedures") to fit statistical models.
 #'
-#' @field parameters rcvirtual.parameters. Parameters used by strategy.
+#' @field parameters list. Parameters used by strategy.
 #' @field fit.counter numeric. Iteration counter
 #' @field model.res list. Model fitting output
 #' @field model.fitted logical. Has the model been fitted?
 #'
+#' @include v-basic.R
 #' @importFrom methods new
 #' @exportClass rcvirtual.strategy
 #'
@@ -17,7 +18,7 @@ setRefClass(
   Class = "rcvirtual.strategy",
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(
-    parameters = "rcvirtual.parameters",
+    parameters = "list",
     graph = "matrix",
     shiny.app = 'ANY',
     fit.counter = "numeric",
@@ -33,9 +34,8 @@ setRefClass(
       "Constructor of virtual strategy"
 
       callSuper()
-      .self$graph <- .self$get.graph()
-      .self$set.initial()
-      .self$set.types()
+      .self$set.graph()
+      .self$set.parameters()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -55,23 +55,15 @@ setRefClass(
         my.fun <- .self$test.log.likelihood
       }
 
-      # retrieving unknown parameters
-      unk.parameters <-
-        .self$parameters$get.unk.parameters()
+      # retrieving a list of unknown parameters
+      unk.parameters <- .self$get.unknown.parameters()
 
       if (is.null(unk.parameters)) {
         stop("No unknown parameters.")
       }
-      ini <- unlist(
-        mapply(unk.parameters, FUN = function(dt) dt$value))
-      lb <- unlist(
-        mapply(unk.parameters, FUN = function(dt) {
-          rep(dt$lbound, dt$size)
-        }))
-      ub <- unlist(
-        mapply(unk.parameters, FUN = function(dt) {
-          rep(dt$ubound, dt$size)
-        }))
+      ini <- unlist(mapply(unk.parameters, FUN = function(dt) dt$rnd()))
+      lb <- unlist(mapply(unk.parameters, FUN = function(dt) dt$lbound))
+      ub <- unlist(mapply(unk.parameters, FUN = function(dt) dt$ubound))
 
       .self$model.res <- optim(
         par = ini,
@@ -94,62 +86,19 @@ setRefClass(
       .self$fit.counter <- .self$fit.counter + 1
     },
 
-    set.value = function(param.name, objs,
-                         update.timestamp = TRUE){
-      "Store an object as a parameter"
+    set.value = function(param.name, obj, update.timestamp = TRUE){
+      "Shortcut function to store an object in a parameter"
 
-      .self$parameters$set.data(
-        param.name = param.name, field.name = "value",
-        objs = objs, update.timestamp = update.timestamp)
+      .self$set.data(param.name, field = 'value', obj, update.timestamp)
     },
 
-    set.reshape = function(pars, sz){
-      for (i in seq_along(pars)) {
-        mypar <- pars[i]
-        if (.self$parameters$get.size(id = mypar) != sz) {
-          if (.self$verbose) {
-            cat("reshaping", mypar, "to size", sz, "\n")
-          }
-          .self$parameters$set.data(
-            param.name = mypar, field.name = "size",
-            obj = sz, update.timestamp = FALSE)
-          .self$parameters$set.data(
-            param.name = mypar, field.name = "value",
-            update.timestamp = FALSE,
-            obj = rep(.self$get.value(mypar), sz))
-          # lb <- .self$parameters$get.data(
-          #   param.name = mypar, field.name = "lbound")
-          # ub <- .self$parameters$get.data(
-          #   param.name = mypar, field.name = "ubound")
-          # .self$parameters$set.data(
-          #   param.name = mypar, field.name = "lbound",
-          #   obj = rep(lb, sz))
-          # .self$parameters$set.data(
-          #   param.name = mypar, field.name = "ubound",
-          #   obj = rep(ub, sz))
-        }
-      }
-    },
+    set.data = function(param.name, field, obj, update.timestamp = TRUE) {
+      "Store an object in a parameter"
 
-    set.log.likelihood = function(){
-      "Runs the forward filter and sets the likelihood"
-
-      .self$set.adimensional()
-      .self$set.spatial()
-      .self$set.temporal()
-      .self$set.ffbs()
-      .self$set.compute.L()
-
-    },
-
-    set.initial = function() {
-      "Initialize parameters; initialization order is based on graph"
-
-      npar <- nrow(.self$graph)
-      pnames <- dimnames(.self$graph)[[1]]
-      for (param.name in pnames) {
-        .self$set.compute(param.name)
-      }
+      stopifnot(.self$is.parameter(param.name))
+      pstring <- paste0('.self$parameters$', param.name, '$', field.name,
+                        ' <- ', obj)
+      eval(parse(text = pstring))
     },
 
     set.compute = function(param.name, update.timestamp = TRUE) {
@@ -181,29 +130,46 @@ setRefClass(
       }
     },
 
-    set.types = function() {
-      'Guess the type of parameter from its value
-      TODO: use rcvirtual.random for unknown parameters'
+    set.parameters = function() {
+      "Constructs a list of parameters required to fit a model"
 
-      pnames <- dimnames(.self$graph)[[1]]
-      for (param.name in pnames) {
-        obj <- .self$get.value(param.name)
-        #if (is(obj, 'rcvirtual.random')) {
-        #  my.type <- 'unknown'
-        #} else {
-        #  my.type <- 'derived'
-        #}
-        if (is.list(obj)) {
-          if (is.null(obj$type)) {
-            my.type <- 'derived'
+      #
+      # Creating the list of parameters
+      #
+      pnames <- .self$get.parameter.names()
+      npar <- length(pnames)
+      .self$parameters <- vector('list', length = npar)
+      names(.self$parameters) <- pnames
+      #
+      # Populating the list, in the correct order (provided by the graph)
+      #
+      for(param.name in pnames) {
+        #
+        # Parents of this parameter
+        #
+        parents <- names(which(.self$graph[param.name,] == 1))
+        #
+        # Calling the user's "get.compute
+        pvec <- mapply(parents, FUN = function(p) {
+          paste0(p, " = .self$get.value('", p, "')")
+        })
+        pstring <- paste0(pvec, collapse = ',')
+        fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
+        res <- eval(parse(text = fstring))
+        if (is(res, 'rcvirtual.basic')) {
+          if (is(res, 'rcvirtual.random')) {
+            #random vectors
+            obj <- list(type = class(res), prior = res, value = res$rnd(),
+                        posterior = NA)
           } else {
-            my.type <- obj$type
+            #constants
+            obj <- res
           }
         } else {
-          my.type <- 'fixed'
+          #derived objects
+          obj <- Derived(name = param.name, value = res)
         }
-        .self$parameters$set.data(param.name = param.name, field.name = "type",
-                                  objs = my.type)
+        .self$parameters[[param.name]] <- obj
       }
     },
 
@@ -275,6 +241,21 @@ setRefClass(
         inst = inst, cyclical.inst = ci, dd = dd, mm = mm,
         yy = yy, dt = dt, st = st, en = en)
       return(formatted.time)
+    },
+
+    get.parameter.names = function() {
+      'Retrieve the names of parameters in the model,
+      ordered according to the graph'
+
+      out <- dimnames(.self$graph)[[1]]
+      return(out)
+    },
+
+    get.bounds = function(param.name = 'latitude') {
+      'Provides the bounds for a given parameter'
+
+      x <- .self$get.value(param.name)
+      bounds <- c(min(x), max(x))
     },
 
     get.imputation = function(Yall, f, Q, u){
@@ -400,38 +381,12 @@ setRefClass(
       return(llik)
     },
 
-    # ------------------------------------------------------
-    # Get methods ------------------------------------------
-    # ------------------------------------------------------
-
-    get.log.likelihood = function(summarized = TRUE){
-      "Returns the log likelihood for a parameter vector"
-
-      L <- .self$parameters$get.data(long.name = 'log-likelihood')
-      out <- if (summarized) sum(unlist(L$llik)) else L$llik
-      return(out)
-    },
-
-    get.value = function(param.name = NULL, long.name = NULL){
-      "Shortcut function to retrieve a parameter value"
-
-      .self$parameters$get.value(param.name = param.name, long.name = long.name)
-    },
-
-    get.data = function(param.name = NULL,
-                        long.name = NULL,
-                        field.name = "value") {
-      "Shortcut function to retrieve parameter data"
-
-      .self$parameters$get.data(param.name = param.name,
-                                long.name = long.name,
-                                field.name = field.name)
-    },
-
-    get.graph = function() {
+    set.graph = function() {
       'Generates a sorted Directed Acyclic Graph of model parameters'
 
+      #
       # Getting list of parameters and their dependencies (aka parents)
+      #
       arg.list <- .self$get.args('get.compute.')
       tos <- as.character(mapply(names(arg.list), FUN = function(x) {
         strsplit(x, 'get.compute.')[[1]][2]
@@ -444,7 +399,9 @@ setRefClass(
           stop(paste0('A function for parameter ', fr, ' has not been defined.'))
         }
       }
+      #
       # Auxiliary function
+      #
       generate.dependency.matrix <- function(mylist) {
         nargs <- length(mylist)
         mynames <- names(mylist)
@@ -462,7 +419,9 @@ setRefClass(
         m[pos.mat] <- 1
         return(m)
       }
+      #
       # Generating preliminary dependency matrix
+      #
       mat <- generate.dependency.matrix(arg.list)
       #
       # Topologically sorting graph, according to Kahn's algorithm
@@ -490,23 +449,63 @@ setRefClass(
       stopifnot(is.dag)
       #
       # Constructing a sorted list of parameters and its dependency matrix
+      #
       new.list <- lapply(L, FUN = function(j) arg.list[[j]])
       names(new.list) <- node.names[L]
       new.mat <- generate.dependency.matrix(new.list)
-      return(new.mat)
+      #
+      # storing
+      #
+      .self$graph <- new.mat
+    },
+
+    # ------------------------------------------------------
+    # Get methods ------------------------------------------
+    # ------------------------------------------------------
+
+    get.log.likelihood = function(summarized = TRUE){
+      "Returns the log likelihood for a parameter vector"
+
+      L <- .self$parameters$get.data(long.name = 'log-likelihood')
+      out <- if (summarized) sum(unlist(L$llik)) else L$llik
+      return(out)
+    },
+
+    get.value = function(param.name){
+      "Shortcut function to retrieve a parameter value"
+
+      .self$get.data(param.name, field = 'value')
+    },
+
+    get.data = function(param.name, field.name = "value") {
+      "Retrieve parameter data"
+
+      stopifnot(.self$is.parameter(param.name))
+      pstring <- paste0('.self$parameters$', param.name, '$', field.name)
+      out <- eval(parse(text = pstring))
+      return(out)
+    },
+
+    get.parameter.types = function() {
+      'Retrieve the types (classes) of all model parameters, ordered according
+      to the graph'
+
+      pnames <- .self$get.parameter.names()
+      out <- mapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$type
+      })
+      return(out)
     },
 
     # ------------------------------------------------------
     # Is methods -------------------------------------------
     # ------------------------------------------------------
 
-    is.valid = function() {
-      "Function that checks if strategy is valid."
+    is.parameter = function(param.name) {
+      "Check if param.name is among the list of model parameters"
 
-      if (.self$verbose) cat(
-        "rcvirtual.strategy: validating strategy... ")
-      # TODO
-      cat("OK.\n")
+      out <- param.name %in% .self$get.parameter.names()
+      return(out)
     },
 
     is.model.fitted = function(){
@@ -515,11 +514,29 @@ setRefClass(
       return(.self$model.fitted)
     },
 
-    is.skippable = function(force.skip, param.name, parent.names){
-      if (force.skip) return(TRUE)
-      redundant <- .self$parameters$is.redundant.calculation(
-        param.name = param.name, parent.names = parent.names)
-      return(redundant)
+    is.redundant.calculation = function(param.name = NA, parent.names = NULL){
+      "Should a derived quantity be recomputed?"
+
+      my.timestamp <- .self$get.data(param.name = param.name,
+                                     field.name = 'timestamp')
+      if (length(my.timestamp) == 0) return(FALSE) #don't skip: not computed yet
+      if (is.na(my.timestamp)) return(FALSE) # ""
+      if (length(parent.names) == 0) return(TRUE) #skip: no dependencies
+      parent.timestamps <- mapply(parent.names, FUN = function(nm) {
+        .self$get.data(param.name = nm, field.name = 'timestamp')
+      })
+      if (any(is.na(parent.timestamps))) {
+        cat('Problem computing ', param.name, '\n')
+        cat('NA timestamp(s); parent(s) should be computed first. \n')
+        cat('Parents: ', parent.names, '\n')
+        cat('Timestamps: ', parent.timestamps, '\n')
+        return(TRUE)
+      }
+      if (any(parent.timestamps > my.timestamp)) {
+        return(FALSE) #don't skip: updated parent
+      } else {
+        return(TRUE) #skip: more recent than parent(s)
+      }
     },
 
     # ------------------------------------------------------
