@@ -22,6 +22,7 @@ setRefClass(
     graph = "matrix",
     shiny.app = 'ANY',
     fit.counter = "numeric",
+    config = 'data.frame',
     model.res = "list",
     model.fitted = "logical"),
   methods = list(
@@ -36,6 +37,7 @@ setRefClass(
       callSuper()
       .self$set.graph()
       .self$set.parameters()
+      .self$set.config()
       .self$model.fitted <- FALSE
       .self$fit.counter <- 0
     },
@@ -43,6 +45,152 @@ setRefClass(
     # ------------------------------------------------------
     # Set methods ------------------------------------------
     # ------------------------------------------------------
+    set.graph = function() {
+      'Generates a sorted Directed Acyclic Graph of model parameters'
+
+      #
+      # Getting list of parameters and their dependencies (aka parents)
+      #
+      arg.list <- .self$get.args('get.compute.')
+      tos <- as.character(mapply(names(arg.list), FUN = function(x) {
+        strsplit(x, 'get.compute.')[[1]][2]
+      }))
+      names(arg.list) <- tos
+      froms <- unique(as.character(unlist(arg.list)))
+      # Checking that all parents are parameters themselves
+      for (fr in froms) {
+        if (!(fr %in% tos)) {
+          stop(paste0('A function for parameter ', fr, ' has not been defined.'))
+        }
+      }
+      #
+      # Auxiliary function
+      #
+      generate.dependency.matrix <- function(mylist) {
+        nargs <- length(mylist)
+        mynames <- names(mylist)
+        locate <- function(x) which(mynames == x)
+        to.pos <- lapply(1:nargs, FUN = function(k) {
+          rep(locate(mynames[k]), length(mylist[[k]]))
+        })
+        from.pos <- lapply(1:nargs, FUN = function(k) {
+          mapply(mylist[[k]], FUN = locate)
+        })
+        pos.mat <- cbind(as.numeric(unlist(to.pos)),
+                         as.numeric(unlist(from.pos)))
+        m <- matrix(0, nargs, nargs, dimnames = list(to = mynames,
+                                                     from = mynames))
+        m[pos.mat] <- 1
+        return(m)
+      }
+      #
+      # Generating preliminary dependency matrix
+      #
+      mat <- generate.dependency.matrix(arg.list)
+      #
+      # Topologically sorting graph, according to Kahn's algorithm
+      # https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm
+      #
+      node.names <- dimnames(mat)[[1]]
+      nargs <- nrow(mat)
+      i <- 1
+      L <- rep(NA, nargs)
+      S <- which(rowSums(mat) == 0)
+      while (length(S) > 0) {
+        n <- S[1]
+        S <- if (length(S) > 1) S[2:length(S)] else NULL
+        L[i] <- n
+        i <- i + 1
+        m <- which(mat[, n] == 1)
+        len.m <- length(m)
+        if (len.m > 0) {
+          mat[m, n] <- 0
+          p <- if(len.m > 1) (rowSums(mat[m, ]) == 0) else (sum(mat[m, ]) == 0)
+          if (sum(p) > 0) S <- c(S, m[p])
+        }
+      }
+      is.dag <- ((i - 1) == nargs)
+      stopifnot(is.dag)
+      #
+      # Constructing a sorted list of parameters and its dependency matrix
+      #
+      new.list <- lapply(L, FUN = function(j) arg.list[[j]])
+      names(new.list) <- node.names[L]
+      new.mat <- generate.dependency.matrix(new.list)
+      #
+      # storing
+      #
+      .self$graph <- new.mat
+    },
+
+    set.parameters = function() {
+      "Constructs a list of parameters required to fit a model"
+
+      #
+      # Creating the list of parameters
+      #
+      pnames <- .self$get.parameter.names()
+      npar <- length(pnames)
+      .self$parameters <- vector('list', length = npar)
+      names(.self$parameters) <- pnames
+      #
+      # Populating the list, in the correct order (provided by the graph)
+      #
+      for(param.name in pnames) {
+        #
+        # Parents of this parameter
+        #
+        parents <- names(which(.self$graph[param.name,] == 1))
+        #
+        # Calling the user's "get.compute
+        pvec <- mapply(parents, FUN = function(p) {
+          paste0(p, " = .self$get.value('", p, "')")
+        })
+        pstring <- paste0(pvec, collapse = ',')
+        fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
+        res <- eval(parse(text = fstring))
+        if (is(res, 'rcvirtual.basic')) {
+          if (is(res, 'rcvirtual.random')) {
+            #model parameters
+            obj <- ModelParameter(prior = res,
+                                  value = res$rnd(),
+                                  name = res$object.name)
+          } else {
+            #constants
+            obj <- res
+          }
+        } else {
+          #derived objects
+          obj <- Derived(name = param.name, value = res)
+        }
+        .self$parameters[[param.name]] <- obj
+      }
+    },
+
+    set.config = function() {
+
+      pnames <- .self$get.parameter.names()
+      sizes <- lapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$size
+      })
+      types <- lapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$type
+      })
+      lb <- lapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$lb
+      })
+      ub <- lapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$ub
+      })
+      ini <- lapply(pnames, FUN = function(param.name) {
+        .self$parameters[[param.name]]$value
+      })
+
+      .self$config <- data.frame(
+        name = pnames, type = types, size = sizes
+      )
+    },
+
     set.optimize = function(mle = TRUE){
       "Compute maximum likelihood estimates (MLE) or
       maximum a posteriori estimates (MAP) of unknown model
@@ -56,10 +204,8 @@ setRefClass(
       }
 
       # retrieving a vector of unknown parameters
-      unk.parameters <- .self$get.unknown.parameters()
-      unk.size <- mapply(unk.parameters, FUN = function(param.name) {
-        .self$parameters[[param.name]]$size
-      })
+      unk.parameters <- .self$config$name[.self$config$type == 'ModelParameter']
+      unk.size <- .self$config$size[.self$config$type == 'ModelParameter']
 
       if (is.null(unk.parameters)) {
         stop("No unknown parameters.")
@@ -92,12 +238,6 @@ setRefClass(
         unk.parameters = unk.parameters,
         unk.size = unk.size)
       .self$model.fitted <- TRUE
-    },
-
-    set.advance.counter = function(){
-      "Advances the strategy's model fitting counter"
-
-      .self$fit.counter <- .self$fit.counter + 1
     },
 
     set.value = function(param.name, obj, update.timestamp = TRUE){
@@ -144,47 +284,14 @@ setRefClass(
       }
     },
 
-    set.parameters = function() {
-      "Constructs a list of parameters required to fit a model"
+    set.test = function(unk.parameters, unk.parvals, unk.sz) {
 
-      #
-      # Creating the list of parameters
-      #
-      pnames <- .self$get.parameter.names()
-      npar <- length(pnames)
-      .self$parameters <- vector('list', length = npar)
-      names(.self$parameters) <- pnames
-      #
-      # Populating the list, in the correct order (provided by the graph)
-      #
-      for(param.name in pnames) {
-        #
-        # Parents of this parameter
-        #
-        parents <- names(which(.self$graph[param.name,] == 1))
-        #
-        # Calling the user's "get.compute
-        pvec <- mapply(parents, FUN = function(p) {
-          paste0(p, " = .self$get.value('", p, "')")
-        })
-        pstring <- paste0(pvec, collapse = ',')
-        fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
-        res <- eval(parse(text = fstring))
-        if (is(res, 'rcvirtual.basic')) {
-          if (is(res, 'rcvirtual.random')) {
-            #model parameters
-            obj <- ModelParameter(prior = res,
-                                  value = res$rnd(),
-                                  name = res$object.name)
-          } else {
-            #constants
-            obj <- res
-          }
-        } else {
-          #derived objects
-          obj <- Derived(name = param.name, value = res)
-        }
-        .self$parameters[[param.name]] <- obj
+      st <- 0
+      for (i in 1:length(unk.parameters)) {
+        sz <- unk.size[i]
+        val <- unk.parvals[(st + 1):(st + sz)]
+        st <- st + sz
+        .self$set.value(unk.parameters[i], val)
       }
     },
 
@@ -266,12 +373,6 @@ setRefClass(
       return(out)
     },
 
-    get.unknown.parameters = function() {
-      'Retrieve the names of rcbasic.random parameters'
-
-
-    },
-
     get.bounds = function(param.name = 'latitude') {
       'Provides the bounds for a given parameter'
 
@@ -322,23 +423,22 @@ setRefClass(
     # ------------------------------------------------------
     # Test methods -----------------------------------------
     # ------------------------------------------------------
+
     test.log.posterior.density = function(unk.parvals, unk.parameters, unk.size) {
       "Computes the log-posterior density associated with
       a vector of input parameters"
 
-      lpd <- .self$test.log.prior.density(unk.parvals, unk.parameters, unk.size) +
-        .self$test.log.likelihood(unk.parvals, unk.parameters, unk.size)
+      .self$set.test(unk.parvals, unk.parameters, unk.size)
+
+      lpd <- .self$test.log.prior.density() + .self$test.log.likelihood()
       return(lpd)
     },
 
-    test.log.prior.density = function(unk.parvals, unk.parameters, unk.size){
-      "Computes the log-prior density for a vector of
-      input parameters"
+    test.log.prior.density = function(){
+      "Computes the log-prior density for a vector of input parameters"
 
-      lp <- unlist(mapply(unk.parameters, FUN = function(u) {
-        .self$parameters$get.log.prior.density(
-          param.name = u$name, variate = u$value
-        )
+      lp <- unlist(mapply(unk.parameters, FUN = function(param.name) {
+        .self$parameters[[param.name]]$get.log.prior.density()
       }))
       #assuming priors are independent
       lpriord <- sum(lp)
@@ -379,84 +479,6 @@ setRefClass(
       llik <- .self$get.log.likelihood(
         summarized = summarized)
       return(llik)
-    },
-
-    set.graph = function() {
-      'Generates a sorted Directed Acyclic Graph of model parameters'
-
-      #
-      # Getting list of parameters and their dependencies (aka parents)
-      #
-      arg.list <- .self$get.args('get.compute.')
-      tos <- as.character(mapply(names(arg.list), FUN = function(x) {
-        strsplit(x, 'get.compute.')[[1]][2]
-      }))
-      names(arg.list) <- tos
-      froms <- unique(as.character(unlist(arg.list)))
-      # Checking that all parents are parameters themselves
-      for (fr in froms) {
-        if (!(fr %in% tos)) {
-          stop(paste0('A function for parameter ', fr, ' has not been defined.'))
-        }
-      }
-      #
-      # Auxiliary function
-      #
-      generate.dependency.matrix <- function(mylist) {
-        nargs <- length(mylist)
-        mynames <- names(mylist)
-        locate <- function(x) which(mynames == x)
-        to.pos <- lapply(1:nargs, FUN = function(k) {
-          rep(locate(mynames[k]), length(mylist[[k]]))
-        })
-        from.pos <- lapply(1:nargs, FUN = function(k) {
-          mapply(mylist[[k]], FUN = locate)
-        })
-        pos.mat <- cbind(as.numeric(unlist(to.pos)),
-                         as.numeric(unlist(from.pos)))
-        m <- matrix(0, nargs, nargs, dimnames = list(to = mynames,
-                                                     from = mynames))
-        m[pos.mat] <- 1
-        return(m)
-      }
-      #
-      # Generating preliminary dependency matrix
-      #
-      mat <- generate.dependency.matrix(arg.list)
-      #
-      # Topologically sorting graph, according to Kahn's algorithm
-      # https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm
-      #
-      node.names <- dimnames(mat)[[1]]
-      nargs <- nrow(mat)
-      i <- 1
-      L <- rep(NA, nargs)
-      S <- which(rowSums(mat) == 0)
-      while (length(S) > 0) {
-        n <- S[1]
-        S <- if (length(S) > 1) S[2:length(S)] else NULL
-        L[i] <- n
-        i <- i + 1
-        m <- which(mat[, n] == 1)
-        len.m <- length(m)
-        if (len.m > 0) {
-          mat[m, n] <- 0
-          p <- if(len.m > 1) (rowSums(mat[m, ]) == 0) else (sum(mat[m, ]) == 0)
-          if (sum(p) > 0) S <- c(S, m[p])
-        }
-      }
-      is.dag <- ((i - 1) == nargs)
-      stopifnot(is.dag)
-      #
-      # Constructing a sorted list of parameters and its dependency matrix
-      #
-      new.list <- lapply(L, FUN = function(j) arg.list[[j]])
-      names(new.list) <- node.names[L]
-      new.mat <- generate.dependency.matrix(new.list)
-      #
-      # storing
-      #
-      .self$graph <- new.mat
     },
 
     # ------------------------------------------------------
