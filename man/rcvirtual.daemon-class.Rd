@@ -25,7 +25,7 @@ This RC contains fields (a.k.a. "attributes") and methods
 
 \item{\code{construct()}}{Construct basic objects}
 
-\item{\code{fit(mle = TRUE)}}{Request the daemon to fit a model}
+\item{\code{fit(mle = FALSE)}}{Request the daemon to fit a model}
 
 \item{\code{get.data(name)}}{Retrieve data, stored in memory and controlled
 by the daemon}
@@ -34,7 +34,7 @@ by the daemon}
 and any edges that point to/from it}
 
 \item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
-  verbose = TRUE, autoconstruct = FALSE, conf = NULL)}}{Default method to initialize basic objects}
+  verbose = TRUE, autoconstruct = FALSE)}}{Default method to initialize basic objects}
 
 \item{\code{vignette(package.name = .self$name)}}{Provides the vignette associated with this package}
 }}

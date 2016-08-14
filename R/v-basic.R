@@ -8,7 +8,6 @@
 #' @field package.name character. Name of package
 #' @field object.name character. Name of object
 #' @field verbose logical. Are methods verbose when called?
-#' @field conf list. Object configuration
 #'
 #' @import ncdf4
 #' @importFrom methods new
@@ -20,7 +19,6 @@ setRefClass(
   fields = list(
     package.name = "character",
     object.name = "character",
-    conf = "list",
     verbose = "logical"
   ),
   methods = list(
@@ -32,14 +30,12 @@ setRefClass(
     initialize = function(package.name = "anonymous",
                           object.name = "anonymous",
                           verbose = TRUE,
-                          autoconstruct = FALSE,
-                          conf = NULL) {
+                          autoconstruct = FALSE) {
       "Default method to initialize basic objects"
 
       .self$package.name <- package.name
       .self$object.name <- object.name
       .self$verbose <- verbose
-      if (is.list(conf)) .self$set.conf(conf)
       if (autoconstruct) .self$construct()
     },
 
@@ -55,16 +51,6 @@ setRefClass(
     # ------------------------------------------------------
     # Set methods ------------------------------------------
     # ------------------------------------------------------
-
-    set.conf = function(conf = NULL) {
-      "Sets the configuration list for this object"
-
-      .self$conf <- switch(
-        class(conf),
-        "list" = conf,
-        "data.frame" = as.list(conf)
-      )
-    },
 
     set.verbose = function(verbose) {
       "Changes verbosity level"
@@ -152,28 +138,6 @@ setRefClass(
       }
       names(filedata) <- c(names(a$dim), names(a$var))
       return(filedata)
-    },
-
-    get.conf = function(id = NULL, field = NULL) {
-      "Provides the entire configuration object, a vector of
-      entries specified by id, or just a single entry
-      specified by id and field."
-
-      if (is.null(id)) {
-        res <- .self$conf
-      } else {
-        if (!is.null(.self$conf[[id]])) {
-          myarray <- .self$conf[[id]]
-        } else if (!is.null(.self$conf[[id]])) {
-          myarray <- .self$conf[[id]]
-        }
-        if (!is.null(field)) {
-          res <- myarray[field]
-        } else {
-          res <- myarray
-        }
-      }
-      return(res)
     },
 
     get.args = function(function.name.pattern) {

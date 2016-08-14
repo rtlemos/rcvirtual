@@ -16,22 +16,11 @@ Uniform <- setRefClass(
   fields = list(lb = 'numeric',
                 ub = 'numeric'),
   methods = list(
-    initialize = function(lb, ub, name = NULL) {
+    initialize = function(lb = 0, ub = 1, name = NULL) {
 
-      #
-      # Computations for the name
-      #
-      if (is.null(name)) {
-        .self$object.name <- 'NA'
-      } else {
-        .self$object.name <- name
-      }
-      .self$type <- 'Uniform'
-      #
-      # Computations for bounds
-      #
-      .self$lb <- lb
-      .self$ub <- ub
+      callSuper(name = name, type = 'Uniform', lb = lb, ub = ub)
+      .self$size <- length(lb)
+      stopifnot(length(lb) == length(ub))
     },
 
     rnd = function() {

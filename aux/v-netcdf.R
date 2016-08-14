@@ -63,7 +63,6 @@ setRefClass(
 
       callSuper()
 
-      .self$is.spatial.avg <- .self$conf$is.spatial.avg
       netcdf.opened <- FALSE
       loc <- .self$conf$input.file
       if (is.character(loc)) {

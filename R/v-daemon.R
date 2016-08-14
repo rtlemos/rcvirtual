@@ -25,7 +25,6 @@ setRefClass(
     initialize = function(object.name = NULL,
                           verbose = TRUE,
                           autoconstruct = FALSE,
-                          conf = NULL,
                           use.gui = FALSE){
       "Initialize the daemon"
 

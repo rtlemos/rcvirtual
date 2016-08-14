@@ -12,22 +12,27 @@ setRefClass(
   contains = c("rcvirtual.basic", "VIRTUAL"),
   fields = list(type = 'character',
                 univariate = "logical",
+                lb = 'numeric',
+                ub = 'numeric',
                 nr = "numeric",
                 nc = "numeric",
+                size = 'numeric',
                 rng = "rcrng"),
   methods = list(
 
-    size = function(){
-      "Provides the size of this object."
-
-      #callSuper(...)
-      return(list(nr = .self$nr, nc = .self$nc))
-    },
-
-    reset.rng = function(){
-      "Resets this object's random number generator"
-
-      .self$rng$reset()
+    initialize = function(name = NULL,
+                          type,
+                          lb = -.Machine$double.xmax,
+                          ub = .Machine$double.xmax) {
+      if (is.null(name)) {
+        .self$object.name <- 'NA'
+      } else {
+        .self$object.name <- name
+      }
+      .self$type <- type
+      .self$lb <- lb
+      .self$ub <- ub
+      .self$type <- type
     }
   )
 )

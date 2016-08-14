@@ -55,15 +55,30 @@ setRefClass(
         my.fun <- .self$test.log.likelihood
       }
 
-      # retrieving a list of unknown parameters
+      # retrieving a vector of unknown parameters
       unk.parameters <- .self$get.unknown.parameters()
+      unk.size <- mapply(unk.parameters, FUN = function(param.name) {
+        .self$parameters[[param.name]]$size
+      })
 
       if (is.null(unk.parameters)) {
         stop("No unknown parameters.")
       }
-      ini <- unlist(mapply(unk.parameters, FUN = function(dt) dt$rnd()))
-      lb <- unlist(mapply(unk.parameters, FUN = function(dt) dt$lbound))
-      ub <- unlist(mapply(unk.parameters, FUN = function(dt) dt$ubound))
+      ini <- unlist(mapply(unk.parameters, FUN = function(param.name) {
+        .self$parameters[[param.name]]$value
+      }))
+      lb <- unlist(
+        mapply(unk.parameters, unk.sz, FUN = function(param.name, sz) {
+          mylb <- .self$parameters[[param.name]]$lb
+          if (length(mylb) != sz) mylb <- rep(mylb[1], sz)
+          return(mylb)
+        }))
+      ub <- unlist(
+        mapply(unk.parameters, unk.sz, FUN = function(param.name, sz) {
+          myub <- .self$parameters[[param.name]]$ub
+          if (length(myub) != sz) myub <- rep(myub[1], sz)
+          return(myub)
+        }))
 
       .self$model.res <- optim(
         par = ini,
@@ -75,8 +90,7 @@ setRefClass(
         control = list(fnscale = -1, maxit = 30),
         hessian = TRUE,
         unk.parameters = unk.parameters,
-        summarized = TRUE,
-        advance.counter = TRUE)
+        unk.size = unk.size)
       .self$model.fitted <- TRUE
     },
 
@@ -158,9 +172,10 @@ setRefClass(
         res <- eval(parse(text = fstring))
         if (is(res, 'rcvirtual.basic')) {
           if (is(res, 'rcvirtual.random')) {
-            #random vectors
-            obj <- list(type = class(res), prior = res, value = res$rnd(),
-                        posterior = NA)
+            #model parameters
+            obj <- ModelParameter(prior = res,
+                                  value = res$rnd(),
+                                  name = res$object.name)
           } else {
             #constants
             obj <- res
@@ -251,6 +266,12 @@ setRefClass(
       return(out)
     },
 
+    get.unknown.parameters = function() {
+      'Retrieve the names of rcbasic.random parameters'
+
+
+    },
+
     get.bounds = function(param.name = 'latitude') {
       'Provides the bounds for a given parameter'
 
@@ -301,53 +322,32 @@ setRefClass(
     # ------------------------------------------------------
     # Test methods -----------------------------------------
     # ------------------------------------------------------
-    test.log.posterior.density = function(
-      unk.parvals, unk.parameters,
-      advance.counter = FALSE, summarized = TRUE){
+    test.log.posterior.density = function(unk.parvals, unk.parameters, unk.size) {
       "Computes the log-posterior density associated with
       a vector of input parameters"
 
-      #return a single evaluation
-      summarized <- TRUE
-      #advancing counter here, if required
-      if (advance.counter) .self$set.advance.counter()
-      #do not advance counter when computing prior and llik
-      advc <- FALSE
-      lpd <- .self$test.log.prior.density(
-        unk.parvals, unk.parameters,
-        advc, summarized) +
-        .self$test.log.likelihood(
-          unk.parvals, unk.parameters,
-          advc, summarized)
+      lpd <- .self$test.log.prior.density(unk.parvals, unk.parameters, unk.size) +
+        .self$test.log.likelihood(unk.parvals, unk.parameters, unk.size)
       return(lpd)
     },
 
-    test.log.prior.density = function(
-      unk.parvals, unk.parameters,
-      advance.counter = FALSE, summarized = TRUE){
+    test.log.prior.density = function(unk.parvals, unk.parameters, unk.size){
       "Computes the log-prior density for a vector of
       input parameters"
 
-      if (advance.counter) .self$set.advance.counter()
       lp <- unlist(mapply(unk.parameters, FUN = function(u) {
         .self$parameters$get.log.prior.density(
           param.name = u$name, variate = u$value
         )
       }))
-
-      if (summarized) {
-        #assuming priors are independent
-        lpriord <- sum(lp)
-      } else {
-        #return a vector of log prior evaluations
-        lpriord <- lp
-      }
+      #assuming priors are independent
+      lpriord <- sum(lp)
       return(lpriord)
     },
 
     test.log.likelihood = function(
       unk.parvals, unk.parameters,
-      advance.counter = FALSE, summarized = TRUE){
+      advance.counter = FALSE){
       "Sets the log-likelihood based on
       the provided + current set of parameter values"
 

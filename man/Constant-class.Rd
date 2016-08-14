@@ -18,6 +18,6 @@ This RC contains fields (a.k.a. "attributes") and methods
 \item{\code{get.extension(path)}}{Provides the extension of a file}
 
 \item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
-  verbose = TRUE, autoconstruct = FALSE, conf = NULL)}}{Default method to initialize basic objects}
+  verbose = TRUE, autoconstruct = FALSE)}}{Default method to initialize basic objects}
 }}
 

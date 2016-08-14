@@ -43,6 +43,12 @@ output: list with indices of NAs and imputed values}
 
 \item{\code{get.log.likelihood(summarized = TRUE)}}{Returns the log likelihood for a parameter vector}
 
+\item{\code{get.parameter.names()}}{Retrieve the names of parameters in the model,
+ordered according to the graph}
+
+\item{\code{get.parameter.types()}}{Retrieve the types (classes) of all model parameters, ordered according
+to the graph}
+
 \item{\code{get.time.formatted(tbounds.char, tstep = "day", tz = "GMT")}}{Function that formats time information: instants,
 days, months, years, dates, starting instant and
 ending instant.}
@@ -51,7 +57,7 @@ ending instant.}
 
 \item{\code{is.model.fitted()}}{Check if the model has been fitted}
 
-\item{\code{is.parameter(param.name)}}{Function that checks if param.name is among the list of parameters}
+\item{\code{is.parameter(param.name)}}{Check if param.name is among the list of model parameters}
 
 \item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL)}}{Should a derived quantity be recomputed?}
 
@@ -66,9 +72,6 @@ maximum a posteriori estimates (MAP) of unknown model
 parameters}
 
 \item{\code{set.parameters()}}{Constructs a list of parameters required to fit a model}
-
-\item{\code{set.types()}}{Guess the type of parameter from its value
-TODO: use rcvirtual.random for unknown parameters}
 
 \item{\code{set.value(param.name, obj, update.timestamp = TRUE)}}{Shortcut function to store an object in a parameter}
 

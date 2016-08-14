@@ -19,15 +19,8 @@ Normal <- setRefClass(
   methods = list(
     initialize = function(mean, var, name = NULL) {
 
-      #
-      # Computations for the name
-      #
-      if (is.null(name)) {
-        .self$object.name <- 'NA'
-      } else {
-        .self$object.name <- name
-      }
-      .self$type <- 'Normal'
+      callSuper(name = name, type = 'Normal',
+                lb = -.Machine$double.xmax, ub = .Machine$double.xmax)
       #
       # Computations for the mean
       #
@@ -37,18 +30,18 @@ Normal <- setRefClass(
       } else {
         .self$mean <- mean
       }
-      nv <- length(.self$mean)
+      .self$size <- length(.self$mean)
       #
       # Computations for the variance
       #
-      if (nv == 1) {
+      if (.self$size == 1) {
         if (is.numeric(var)) {
-          .self$var <- matrix(var, nrow = nv)
+          .self$var <- matrix(var, nrow = .self$size)
         }
       } else {
         .self$var <- var
       }
-      stopifnot(nrow(.self$var) == nv & ncol(var) == nv)
+      stopifnot(nrow(.self$var) == .self$size & ncol(var) == .self$size)
     },
 
     rnd = function() {

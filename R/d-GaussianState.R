@@ -75,6 +75,7 @@ GaussianState <- setRefClass(
       .self$a <- get.mean(prior.mean)
       .self$nr <- length(.self$m[[1]])
       .self$nc <- 1
+      .self$size <- .self$nr
       #
       # Computations for the variance
       #

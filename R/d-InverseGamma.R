@@ -19,15 +19,8 @@ InverseGamma <- setRefClass(
   methods = list(
     initialize = function(shape, rate, name = NULL) {
 
-      #
-      # Computations for the name
-      #
-      if (is.null(name)) {
-        .self$object.name <- 'NA'
-      } else {
-        .self$object.name <- name
-      }
-      .self$type <- 'InverseGamma'
+      callSuper(name = name, type = 'InverseGamma',
+                lb = .Machine$double.xmin, ub = .Machine$double.xmax)
       #
       # Computations for parameters rate and shape
       # X ~ IG(rate,shape) => E[X]=shape/(rate-1),

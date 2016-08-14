@@ -681,15 +681,13 @@ setRefClass(
       to.pos <- as.numeric(unlist(lapply(1:nargs, FUN = function(k) {
         rep(k, sum(graph[k,] == 1))
       })))
-      to.types <- as.character(unlist(lapply(1:nargs, FUN = function(k) {
-        rep(ptypes[k], sum(graph[k,] == 1))
-      })))
       from.pos <- as.numeric(unlist(lapply(1:nargs, FUN = function(k) {
         which(graph[k,] == 1)
       })))
+      from.types <- ptypes[from.pos]
       df <- data.frame(x = x, y = y, types = ptypes,
                        z = dimnames(graph)[[1]], stringsAsFactors = FALSE)
-      df.arrows <- data.frame(types = to.types,
+      df.arrows <- data.frame(types = from.types,
                               xarrow.start = 0.95 * x[from.pos],
                               yarrow.start = 0.95 * y[from.pos],
                               xarrow.end = 0.95 * x[to.pos],

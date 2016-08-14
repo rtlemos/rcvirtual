@@ -12,10 +12,4 @@ This is a Reference Class for scalar Uniform random variables
 This RC contains fields (a.k.a. "attributes") and methods
 (a.k.a. "procedures") for that any random RC must have.
 }
-\section{Methods}{
-
-\describe{
-\item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
-  verbose = TRUE, autoconstruct = FALSE, conf = NULL)}}{Default method to initialize basic objects}
-}}
 

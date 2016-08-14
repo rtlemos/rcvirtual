@@ -19,8 +19,6 @@ and methods (aka "procedures") for all basic RCs.
 \item{\code{object.name}}{character. Name of object}
 
 \item{\code{verbose}}{logical. Are methods verbose when called?}
-
-\item{\code{conf}}{list. Object configuration}
 }}
 \section{Methods}{
 
@@ -31,10 +29,6 @@ and methods (aka "procedures") for all basic RCs.
 
 \item{\code{get.args(function.name.pattern)}}{Lists the arguments in all the exclusive functions
 that match the pattern provided}
-
-\item{\code{get.conf(id = NULL, field = NULL)}}{Provides the entire configuration object, a vector of
-entries specified by id, or just a single entry
-specified by id and field.}
 
 \item{\code{get.csv(fullpath, unlist = FALSE)}}{General method to import comma separated value files}
 
@@ -52,11 +46,9 @@ its contents as a dataframe}
 \item{\code{help(method = .self$methods())}}{Prints the description under a specific method}
 
 \item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
-  verbose = TRUE, autoconstruct = FALSE, conf = NULL)}}{Default method to initialize basic objects}
+  verbose = TRUE, autoconstruct = FALSE)}}{Default method to initialize basic objects}
 
 \item{\code{methods()}}{Lists the methods available in this object}
-
-\item{\code{set.conf(conf = NULL)}}{Sets the configuration list for this object}
 
 \item{\code{set.name(new.name)}}{Sets the name of a random variable/vector.}
 
