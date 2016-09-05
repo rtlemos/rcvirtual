@@ -14,6 +14,9 @@ Constant <- setRefClass(
   Class = "Constant",
   contains = c("rcvirtual.basic"),
   fields = list(type = 'character',
+                size = 'numeric',
+                lb = 'numeric',
+                ub = 'numeric',
                 value = 'ANY'),
   methods = list(
     initialize = function(value = NULL, path = NULL, name = NULL) {
@@ -46,6 +49,11 @@ Constant <- setRefClass(
       } else {
         stop('Either value or path to file must be provided.')
       }
+      #
+      # Computation for size
+      #
+      .self$size <- length(.self$value)
+      .self$lb <- .self$ub <- 0
     },
 
     get.extension = function(path) {

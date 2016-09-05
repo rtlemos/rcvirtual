@@ -16,8 +16,6 @@ This RC contains fields (a.k.a. "attributes") and methods
 \describe{
 \item{\code{parameters}}{list. Parameters used by strategy.}
 
-\item{\code{fit.counter}}{numeric. Iteration counter}
-
 \item{\code{model.res}}{list. Model fitting output}
 
 \item{\code{model.fitted}}{logical. Has the model been fitted?}
@@ -41,7 +39,7 @@ Q: matrix of predictive covariance;
 u: vector of Gaussian variates;
 output: list with indices of NAs and imputed values}
 
-\item{\code{get.log.likelihood(summarized = TRUE)}}{Returns the log likelihood for a parameter vector}
+\item{\code{get.log.likelihood()}}{Returns the log likelihood for a parameter vector}
 
 \item{\code{get.parameter.names()}}{Retrieve the names of parameters in the model,
 ordered according to the graph}
@@ -61,30 +59,16 @@ ending instant.}
 
 \item{\code{is.redundant.calculation(param.name = NA, parent.names = NULL)}}{Should a derived quantity be recomputed?}
 
-\item{\code{set.advance.counter()}}{Advances the strategy's model fitting counter}
-
 \item{\code{set.data(param.name, field, obj, update.timestamp = TRUE)}}{Store an object in a parameter}
 
 \item{\code{set.graph()}}{Generates a sorted Directed Acyclic Graph of model parameters}
 
-\item{\code{set.optimize(mle = TRUE)}}{Compute maximum likelihood estimates (MLE) or
+\item{\code{set.optimize(mle = TRUE, maxit = 1000)}}{Compute maximum likelihood estimates (MLE) or
 maximum a posteriori estimates (MAP) of unknown model
 parameters}
 
 \item{\code{set.parameters()}}{Constructs a list of parameters required to fit a model}
 
 \item{\code{set.value(param.name, obj, update.timestamp = TRUE)}}{Shortcut function to store an object in a parameter}
-
-\item{\code{test.log.likelihood(unk.parvals, unk.parameters, advance.counter = FALSE,
-  summarized = TRUE)}}{Sets the log-likelihood based on
-the provided + current set of parameter values}
-
-\item{\code{test.log.posterior.density(unk.parvals, unk.parameters,
-  advance.counter = FALSE, summarized = TRUE)}}{Computes the log-posterior density associated with
-a vector of input parameters}
-
-\item{\code{test.log.prior.density(unk.parvals, unk.parameters, advance.counter = FALSE,
-  summarized = TRUE)}}{Computes the log-prior density for a vector of
-input parameters}
 }}
 

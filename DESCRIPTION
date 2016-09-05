@@ -7,16 +7,16 @@ Authors@R: person("Ricardo", "T. Lemos",
            email = "rtl00@yahoo.com",
            role = c("aut", "cre"))
 Description: This package contains a set of reference classes for statistical
-    modelling with R. These classes are called "virtual", in the sense that they are
-    designed to set the wireframe for other, "concrete" classes, that implement a
-    specific statistical model. After installing, type the following to get started:
-    > vignette('rcvirtual-vignette', package = 'rcvirtual')
+    modelling with R. These classes are called "virtual", in the sense that
+    they are designed to set the wireframe for other, "concrete" classes, that
+    implement a specific statistical model. After installing, type the
+    following to get started: > vignette('rcvirtual-vignette', package =
+    'rcvirtual')
 License: file LICENSE
 LazyData: true
 Imports:
     methods,
     rcrandom,
-    ncdf4,
     grid,
     ggplot2,
     shiny
@@ -33,9 +33,11 @@ Collate:
     'd-random.R'
     'd-GaussianState.R'
     'd-InverseGamma.R'
+    'd-LogLikelihood.R'
     'd-ModelParameter.R'
     'd-Normal.R'
     'd-Time.R'
+    'd-TruncatedNormal.R'
     'd-Uniform.R'
     'v-strategy.R'
     'v-plotter.R'

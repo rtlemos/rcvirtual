@@ -19,8 +19,7 @@ InverseGamma <- setRefClass(
   methods = list(
     initialize = function(shape, rate, name = NULL) {
 
-      callSuper(name = name, type = 'InverseGamma',
-                lb = .Machine$double.xmin, ub = .Machine$double.xmax)
+      callSuper(name = name, type = 'InverseGamma', lb = 1e-10, ub = 1e10)
       #
       # Computations for parameters rate and shape
       # X ~ IG(rate,shape) => E[X]=shape/(rate-1),
@@ -30,6 +29,16 @@ InverseGamma <- setRefClass(
       stopifnot(rate > 2)
       .self$rate <- rate
       .self$shape <- shape
+    },
+
+    pdf = function(quantile, log = FALSE) {
+      if (quantile < .self$lb | quantile > .self$ub) {
+        out <- if(log) -1e10 else 1e-10
+      } else {
+        out <- dgamma(x = 1 / quantile, rate = .self$rate,
+                      shape = .self$shape, log = log)
+      }
+      return(out)
     },
 
     rnd = function() {

@@ -25,7 +25,7 @@ This RC contains fields (a.k.a. "attributes") and methods
 
 \item{\code{construct()}}{Construct basic objects}
 
-\item{\code{fit(mle = FALSE)}}{Request the daemon to fit a model}
+\item{\code{fit(mle = FALSE, maxit = 1000)}}{Request the daemon to fit a model}
 
 \item{\code{get.data(name)}}{Retrieve data, stored in memory and controlled
 by the daemon}

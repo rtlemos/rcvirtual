@@ -23,6 +23,15 @@ Uniform <- setRefClass(
       stopifnot(length(lb) == length(ub))
     },
 
+    pdf = function(quantile, log = FALSE) {
+      if (quantile < .self$lb | quantile > .self$ub) {
+        out <- if(log) -1e10 else 1e-10
+      } else {
+        out <- dunif(x = quantile, min = .self$lb, max = .self$ub, log = log)
+      }
+      return(out)
+    },
+
     rnd = function() {
       runif(1, min = .self$lb, max = .self$ub)
     }

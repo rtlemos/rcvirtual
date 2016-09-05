@@ -18,8 +18,8 @@ ModelParameter <- setRefClass(
   methods = list(
     initialize = function(prior = NULL, value = NULL, name = NULL) {
 
-      lbound <- if (is.null(prior)) -.Machine$double.xmax else prior$lb
-      ubound <- if (is.null(prior)) .Machine$double.xmax else prior$ub
+      lbound <- if (is.null(prior)) -1e10 else prior$lb
+      ubound <- if (is.null(prior)) 1e10 else prior$ub
       callSuper(name = name, type = 'ModelParameter', lb = lbound, ub = ubound)
       #
       # Computations for the prior
@@ -36,6 +36,7 @@ ModelParameter <- setRefClass(
       } else if (!is.null(prior)) {
         .self$value <- .self$prior$rnd()
       }
+      .self$size <- length(.self$value)
     },
 
     rnd = function(from.posterior = TRUE) {

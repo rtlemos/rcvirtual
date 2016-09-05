@@ -14,6 +14,9 @@ Derived <- setRefClass(
   Class = "Derived",
   contains = c("rcvirtual.basic"),
   fields = list(type = 'character',
+                size = 'numeric',
+                lb = 'numeric',
+                ub = 'numeric',
                 value = 'ANY'),
   methods = list(
     initialize = function(value, name = NULL) {
@@ -36,6 +39,11 @@ Derived <- setRefClass(
         stop(name, ' must be either numeric, a matrix, or a list, not a ',
              class(value))
       }
+      #
+      # Computation for size
+      #
+      .self$size <- length(.self$value)
+      .self$lb <- .self$ub <- 0
     }
   )
 )

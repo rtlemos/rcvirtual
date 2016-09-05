@@ -8,10 +8,4 @@
 \description{
 This is a Reference Class for random variables and vectors that enter models
 }
-\section{Methods}{
-
-\describe{
-\item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
-  verbose = TRUE, autoconstruct = FALSE)}}{Default method to initialize basic objects}
-}}
 

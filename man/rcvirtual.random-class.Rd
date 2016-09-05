@@ -12,9 +12,5 @@ This is a virtual Reference Class for random variable and random vector RCs
 \describe{
 \item{\code{initialize(package.name = "anonymous", object.name = "anonymous",
   verbose = TRUE, autoconstruct = FALSE)}}{Default method to initialize basic objects}
-
-\item{\code{reset.rng()}}{Resets this object's random number generator}
-
-\item{\code{size()}}{Provides the size of this object.}
 }}
 

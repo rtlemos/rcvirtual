@@ -9,7 +9,7 @@
 #' @field object.name character. Name of object
 #' @field verbose logical. Are methods verbose when called?
 #'
-#' @import ncdf4
+#' #@import ncdf4
 #' @importFrom methods new
 #' @exportClass rcvirtual.basic
 #'
@@ -19,6 +19,7 @@ setRefClass(
   fields = list(
     package.name = "character",
     object.name = "character",
+    timestamp = "POSIXct",
     verbose = "logical"
   ),
   methods = list(
@@ -36,6 +37,7 @@ setRefClass(
       .self$package.name <- package.name
       .self$object.name <- object.name
       .self$verbose <- verbose
+      .self$timestamp <- Sys.time()
       if (autoconstruct) .self$construct()
     },
 
@@ -117,28 +119,28 @@ setRefClass(
       return(mydt)
     },
 
-    get.netcdf = function(fullpath, var.name = NULL){
-      "Retrieves data from any netcdf file on disk and
-      returns a list"
-
-      a <- ncdf4::nc_open(fullpath)
-      if (is.null(var.name)) {
-        vname <- a$var.names[1]
-      } else {
-        vname <- var.name
-      }
-      filedata <- vector("list", length = a$ndims + a$nvars)
-      for (i in 1:a$ndims) {
-        filedata[[i]] <- a$dim[[i]]$vals
-      }
-      for (j in 1:a$nvars) {
-        i <- a$ndims + j
-        myid <- names(a$var)[j]
-        filedata[[i]] <- ncdf4::ncvar_get(a, varid = myid)
-      }
-      names(filedata) <- c(names(a$dim), names(a$var))
-      return(filedata)
-    },
+    # get.netcdf = function(fullpath, var.name = NULL){
+    #   "Retrieves data from any netcdf file on disk and
+    #   returns a list"
+    #
+    #   a <- ncdf4::nc_open(fullpath)
+    #   if (is.null(var.name)) {
+    #     vname <- a$var.names[1]
+    #   } else {
+    #     vname <- var.name
+    #   }
+    #   filedata <- vector("list", length = a$ndims + a$nvars)
+    #   for (i in 1:a$ndims) {
+    #     filedata[[i]] <- a$dim[[i]]$vals
+    #   }
+    #   for (j in 1:a$nvars) {
+    #     i <- a$ndims + j
+    #     myid <- names(a$var)[j]
+    #     filedata[[i]] <- ncdf4::ncvar_get(a, varid = myid)
+    #   }
+    #   names(filedata) <- c(names(a$dim), names(a$var))
+    #   return(filedata)
+    # },
 
     get.args = function(function.name.pattern) {
       'Lists the arguments in all the exclusive functions

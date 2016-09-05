@@ -18,7 +18,9 @@ and methods (aka "procedures") for all basic RCs.
 
 \item{\code{object.name}}{character. Name of object}
 
-\item{\code{verbose}}{logical. Are methods verbose when called?}
+\item{\code{verbose}}{logical. Are methods verbose when called?
+
+#@import ncdf4}
 }}
 \section{Methods}{
 
@@ -33,9 +35,6 @@ that match the pattern provided}
 \item{\code{get.csv(fullpath, unlist = FALSE)}}{General method to import comma separated value files}
 
 \item{\code{get.name()}}{Provides the object's name.}
-
-\item{\code{get.netcdf(fullpath, var.name = NULL)}}{Retrieves data from any netcdf file on disk and
-returns a list}
 
 \item{\code{get.rdata(fullpath)}}{Reads an .RData or .rda file and passes
 its contents as a list}

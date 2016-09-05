@@ -59,8 +59,10 @@ setRefClass(
       .self$plotter$strategy <- .self$strategy
 
       # moving data sets in package to *.Rdata objects in tempdir()
-      for (obj in as.character(data(package = package)$results[, "Item"])) {
-        save(list = obj, file = paste0(tempdir(), '/', obj, '.RData'))
+      if (!is.null(tryCatch(data(package = package), error = function(e) NULL))) {
+        for (obj in as.character(data(package = package)$results[, "Item"])) {
+          save(list = obj, file = paste0(tempdir(), '/', obj, '.RData'))
+        }
       }
 
       # If autoconstruct = TRUE, proceed to constructing daemon and dependencies
@@ -117,10 +119,10 @@ setRefClass(
     # User methods -----------------------------------------
     # ------------------------------------------------------
 
-    fit = function(mle = FALSE){
+    fit = function(mle = FALSE, maxit = 1000){
       "Request the daemon to fit a model"
 
-      .self$strategy$set.optimize(mle = mle)
+      .self$strategy$set.optimize(mle = mle, maxit = maxit)
     },
 
     vignette = function(package.name = .self$name){

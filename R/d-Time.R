@@ -14,6 +14,7 @@ Time <- setRefClass(
   Class = "Time",
   contains = c("rcvirtual.basic"),
   fields = list(type = 'character',
+                size = 'numeric',
                 value = 'numeric',
                 date = 'POSIXlt',
                 cyclical.instant = 'numeric',
@@ -21,8 +22,8 @@ Time <- setRefClass(
                 day = 'numeric',
                 month = 'numeric',
                 year = 'numeric',
-                start = 'numeric',
-                end = 'numeric'
+                lb = 'numeric',
+                ub = 'numeric'
                 ),
   methods = list(
     initialize = function(lb, ub, tz = 'GMT', step = 'days', name = 'time') {
@@ -74,8 +75,9 @@ Time <- setRefClass(
                                        FUN = function(y, m, d) {
                                          paste(y, m, d, sep = "/")
                                        }))
-      .self$start <- 1
-      .self$end <- n
+      .self$lb <- 1
+      .self$ub <- n
+      .self$size <- n
     }
   )
 )

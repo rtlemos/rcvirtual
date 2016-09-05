@@ -44,6 +44,10 @@ Normal <- setRefClass(
       stopifnot(nrow(.self$var) == .self$size & ncol(var) == .self$size)
     },
 
+    pdf = function(quantile, log = FALSE) {
+      dnorm(x = quantile, mean = .self$mean, sd = sqrt(.self$var), log = log)
+    },
+
     rnd = function() {
       rnorm(1, mean = .self$mean, sd = sqrt(.self$var))
     }

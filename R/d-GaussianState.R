@@ -13,8 +13,14 @@
 #'
 GaussianState <- setRefClass(
   Class = "GaussianState",
-  contains = c("rcvirtual.random"),
-  fields = list(n.instants = 'numeric',
+  contains = c("rcvirtual.basic"),
+  fields = list(type ='character',
+                n.instants = 'numeric',
+                nr = 'numeric',
+                nc = 'numeric',
+                size = 'numeric',
+                lb = 'numeric',
+                ub = 'numeric',
                 m = 'list',
                 a = 'list',
                 C = 'list',
@@ -76,6 +82,8 @@ GaussianState <- setRefClass(
       .self$nr <- length(.self$m[[1]])
       .self$nc <- 1
       .self$size <- .self$nr
+      .self$lb <- -1e10
+      .self$ub <- 1e10
       #
       # Computations for the variance
       #

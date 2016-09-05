@@ -6,7 +6,6 @@
 #' (a.k.a. "procedures") to fit statistical models.
 #'
 #' @field parameters list. Parameters used by strategy.
-#' @field fit.counter numeric. Iteration counter
 #' @field model.res list. Model fitting output
 #' @field model.fitted logical. Has the model been fitted?
 #'
@@ -21,33 +20,35 @@ setRefClass(
     parameters = "list",
     graph = "matrix",
     shiny.app = 'ANY',
-    fit.counter = "numeric",
     config = 'data.frame',
     model.res = "list",
-    model.fitted = "logical"),
+    mcmc.res = "matrix",
+    model.counter = "numeric",
+    model.fitted = "logical",
+    use.mle = "logical"),
   methods = list(
-
+    
     # ------------------------------------------------------
     # Initializer methods ----------------------------------
     # ------------------------------------------------------
-
+    
     construct = function() {
       "Constructor of virtual strategy"
-
+      
       callSuper()
       .self$set.graph()
       .self$set.parameters()
       .self$set.config()
+      .self$model.counter <- 0
       .self$model.fitted <- FALSE
-      .self$fit.counter <- 0
     },
-
+    
     # ------------------------------------------------------
     # Set methods ------------------------------------------
     # ------------------------------------------------------
     set.graph = function() {
       'Generates a sorted Directed Acyclic Graph of model parameters'
-
+      
       #
       # Getting list of parameters and their dependencies (aka parents)
       #
@@ -122,10 +123,10 @@ setRefClass(
       #
       .self$graph <- new.mat
     },
-
+    
     set.parameters = function() {
       "Constructs a list of parameters required to fit a model"
-
+      
       #
       # Creating the list of parameters
       #
@@ -166,143 +167,151 @@ setRefClass(
         .self$parameters[[param.name]] <- obj
       }
     },
-
+    
     set.config = function() {
-
+      
       pnames <- .self$get.parameter.names()
-      sizes <- lapply(pnames, FUN = function(param.name) {
+      sizes <- unlist(lapply(pnames, FUN = function(param.name) {
         .self$parameters[[param.name]]$size
-      })
-      types <- lapply(pnames, FUN = function(param.name) {
+      }))
+      types <- unlist(lapply(pnames, FUN = function(param.name) {
         .self$parameters[[param.name]]$type
-      })
-      lb <- lapply(pnames, FUN = function(param.name) {
+      }))
+      lb <- unlist(lapply(pnames, FUN = function(param.name) {
         .self$parameters[[param.name]]$lb
-      })
-      ub <- lapply(pnames, FUN = function(param.name) {
+      }))
+      ub <- unlist(lapply(pnames, FUN = function(param.name) {
         .self$parameters[[param.name]]$ub
-      })
-      ini <- lapply(pnames, FUN = function(param.name) {
-        .self$parameters[[param.name]]$value
-      })
-
+      }))
+      
       .self$config <- data.frame(
-        name = pnames, type = types, size = sizes
+        name = pnames, type = types, size = sizes, lb = lb,
+        ub = ub, stringsAsFactors = FALSE
       )
     },
-
-    set.optimize = function(mle = TRUE){
+    
+    set.optimize = function(mle = TRUE, maxit = 1000){
       "Compute maximum likelihood estimates (MLE) or
       maximum a posteriori estimates (MAP) of unknown model
       parameters"
-
-      #function to optimize
-      if (mle) {
-        my.fun <- .self$test.log.posterior.density
-      } else {
-        my.fun <- .self$test.log.likelihood
-      }
-
+      
+      .self$use.mle <- mle
       # retrieving a vector of unknown parameters
-      unk.parameters <- .self$config$name[.self$config$type == 'ModelParameter']
-      unk.size <- .self$config$size[.self$config$type == 'ModelParameter']
-
+      mp <- .self$config$type == 'ModelParameter'
+      unk.parameters <- .self$config$name[mp]
       if (is.null(unk.parameters)) {
         stop("No unknown parameters.")
       }
-      ini <- unlist(mapply(unk.parameters, FUN = function(param.name) {
+      derived.parameters <- .self$config$name[.self$config$type == 'Derived']
+      ini <- unlist(lapply(unk.parameters, FUN = function(param.name) {
         .self$parameters[[param.name]]$value
       }))
-      lb <- unlist(
-        mapply(unk.parameters, unk.sz, FUN = function(param.name, sz) {
-          mylb <- .self$parameters[[param.name]]$lb
-          if (length(mylb) != sz) mylb <- rep(mylb[1], sz)
-          return(mylb)
-        }))
-      ub <- unlist(
-        mapply(unk.parameters, unk.sz, FUN = function(param.name, sz) {
-          myub <- .self$parameters[[param.name]]$ub
-          if (length(myub) != sz) myub <- rep(myub[1], sz)
-          return(myub)
-        }))
-
+      .self$model.counter <- 0
       .self$model.res <- optim(
         par = ini,
-        fn = my.fun,
+        fn = .self$test.fun,
         gr  = NULL,
         method = "L-BFGS-B",
-        lower = lb,
-        upper = ub,
-        control = list(fnscale = -1, maxit = 30),
+        lower = .self$config$lb[mp],
+        upper = .self$config$ub[mp],
+        control = list(fnscale = -1, maxit = maxit),
         hessian = TRUE,
         unk.parameters = unk.parameters,
-        unk.size = unk.size)
+        unk.size = .self$config$size[mp],
+        derived.parameters = derived.parameters)
+      names(.self$model.res$par) <- unk.parameters
+      dimnames(.self$model.res$hessian) <- list(unk.parameters, unk.parameters)
       .self$model.fitted <- TRUE
     },
-
+    
+    set.independence.sampler = function(nits = 10000) {
+      npar <- length(.self$model.res$par)
+      unk.parameters <- names(.self$model.res$par)
+      mp <- .self$config$type == 'ModelParameter'
+      derived.parameters <- .self$config$name[.self$config$type == 'Derived']
+      variates <- matrix(nrow = npar, ncol = nits, 
+                         c(rep(0, npar), rnorm(npar * (nits - 1))),
+                         dimnames = list(unk.parameters, NULL))
+      R <- chol(-.self$model.res$hessian)
+      candidates <- solve(R, variates) + .self$model.res$par
+      log.prop.density <- mapply(1:nits, FUN = function(i) {
+        sum(variates[, i] ^ 2)
+      })
+      log.approx.density <- mapply(1:nits, FUN = function(i) {
+        .self$test.fun(unk.parameters, candidates[, i], 
+                       .self$config$size[mp], derived.parameters)
+      })
+      log.u <- log(runif(nits))
+      x0 <- .self$model.res$par
+      lad0 <- log.approx.density[1]
+      lpd0 <- log.prop.density[1]
+      for (i in 1:nits) {
+        log.ratio <- min(0, log.approx.density[i] - lad0 +
+                           lpd0 - log.prop.density[i])
+        if (log.u[i] <= log.ratio) {
+          x0 <- candidates[, i]
+          lad0 <- log.approx.density[i]
+          lpd0 <- log.prop.density[i]
+        } else {
+          candidates[, i] <- x0
+        }
+      }
+      .self$mcmc.res <- candidates 
+    },
+    
     set.value = function(param.name, obj, update.timestamp = TRUE){
       "Shortcut function to store an object in a parameter"
-
+      
       .self$set.data(param.name, field = 'value', obj, update.timestamp)
     },
-
+    
     set.data = function(param.name, field, obj, update.timestamp = TRUE) {
       "Store an object in a parameter"
-
+      
       stopifnot(.self$is.parameter(param.name))
-      pstring <- paste0('.self$parameters$', param.name, '$', field.name,
-                        ' <- ', obj)
+      if (is(obj, 'rcvirtual.basic')) obj <- obj$value
+      pstring <- paste0('.self$parameters$', param.name, '$', field, ' <-  obj')
       eval(parse(text = pstring))
     },
-
+    
     set.compute = function(param.name, update.timestamp = TRUE) {
-
+      
       parents <- names(which(.self$graph[param.name,] == 1))
-      redundant <- .self$parameters$is.redundant.calculation(
-        param.name = param.name, parent.names = parents)
+      redundant <- .self$is.redundant.calculation(param.name = param.name,
+                                                  parent.names = parents)
       if (redundant) {
-
+        
       } else {
         pvec <- mapply(parents, FUN = function(p) {
           paste0(p, " = .self$get.value('", p, "')")
         })
         pstring <- paste0(pvec, collapse = ',')
         fstring <- paste0('.self$get.compute.', param.name, '(', pstring, ')')
-        objs <- eval(parse(text = fstring))
-        #
-        #RTL TODO: replace below with a DISTR test
-        #
-        if (is.list(objs)) {
-          if (names(objs)[1] == 'type') {
-            if (objs$type == 'unknown') {
-              objs <- runif(1)
-            }
-          }
-        }
-        .self$set.value(param.name = param.name, objs = objs,
-                        update.timestamp = update.timestamp)
+        obj <- eval(parse(text = fstring))
+        .self$set.value(param.name = param.name, obj = obj,
+                        update.timestamp = TRUE)
       }
     },
-
-    set.test = function(unk.parameters, unk.parvals, unk.sz) {
-
-      st <- 0
-      for (i in 1:length(unk.parameters)) {
-        sz <- unk.size[i]
-        val <- unk.parvals[(st + 1):(st + sz)]
-        st <- st + sz
-        .self$set.value(unk.parameters[i], val)
-      }
-    },
-
+    
     # ------------------------------------------------------
     # Get methods ------------------------------------------
     # ------------------------------------------------------
-
+    
+    get.log.prior.density = function(unk.parameters) {
+      
+      lp <- unlist(mapply(unk.parameters, FUN = function(param.name) {
+        .self$parameters[[param.name]]$prior$pdf(
+          .self$parameters[[param.name]]$value, log = TRUE)
+      }))
+      #assuming priors are independent
+      lpriord <- sum(lp)
+      return(lpriord)
+    },
+    
     get.dependencies = function(x) {
       "Loads the dependencies of parameter x onto the global environment.
       Use this to debug 'get.compute.x' functions"
-
+      
       args <- names(which(.self$graph[x, ] == 1))
       for (myarg in args) {
         z <- .self$get.value(myarg)
@@ -310,13 +319,22 @@ setRefClass(
       }
       invisible()
     },
-
+    
+    get.posterior.correl = function(method = 'hessian') {
+      mat <- switch(
+        method,
+        'mcmc' = round(cov2cor(var(t(.self$mcmc.res))), 2),
+        'hessian' = round(cov2cor(solve(-.self$model.res$hessian)), 2)
+      )
+      return(mat)
+    },
+    
     get.time.formatted = function(tbounds.char, tstep = 'day', tz = 'GMT') {
       "Function that formats time information: instants,
       days, months, years, dates, starting instant and
       ending instant."
-
-
+      
+      
       #time instants; days since Jan 01, 1970
       time.bounds <- as.POSIXlt(tbounds.char,
                                 origin = as.POSIXct('1970/01/01', tz = tz))
@@ -364,22 +382,39 @@ setRefClass(
         yy = yy, dt = dt, st = st, en = en)
       return(formatted.time)
     },
-
+    
     get.parameter.names = function() {
       'Retrieve the names of parameters in the model,
       ordered according to the graph'
-
+      
       out <- dimnames(.self$graph)[[1]]
       return(out)
     },
-
+    
+    get.unknown.parameters = function() {
+      
+      out <- .self$config$name[.self$config$type == 'ModelParameter']
+      return(out)
+    },
+    
+    get.unknown.parameter.values = function(unlisted = TRUE) {
+      
+      unk.parameters <- .self$get.unknown.parameters()
+      out <- lapply(unk.parameters, FUN = function(param.name) {
+        .self$get.value(param.name = param.name)
+      })
+      names(out) <- unk.parameters
+      if(unlisted) out <- unlist(out)
+      return(out)
+    },
+    
     get.bounds = function(param.name = 'latitude') {
       'Provides the bounds for a given parameter'
-
+      
       x <- .self$get.value(param.name)
       bounds <- c(min(x), max(x))
     },
-
+    
     get.imputation = function(Yall, f, Q, u){
       "Impute missing values from obs & forecasts.
       Yall: vector with some NAs (missing values);
@@ -387,7 +422,7 @@ setRefClass(
       Q: matrix of predictive covariance;
       u: vector of Gaussian variates;
       output: list with indices of NAs and imputed values"
-
+      
       summ.na <- sum(is.na(Yall))
       if (summ.na == 0) {
         Y.imputed <- list(idx = NULL, value = NULL)
@@ -419,89 +454,58 @@ setRefClass(
       }
       return(Y.imputed)
     },
-
+    
     # ------------------------------------------------------
     # Test methods -----------------------------------------
     # ------------------------------------------------------
-
-    test.log.posterior.density = function(unk.parvals, unk.parameters, unk.size) {
-      "Computes the log-posterior density associated with
-      a vector of input parameters"
-
-      .self$set.test(unk.parvals, unk.parameters, unk.size)
-
-      lpd <- .self$test.log.prior.density() + .self$test.log.likelihood()
-      return(lpd)
-    },
-
-    test.log.prior.density = function(){
-      "Computes the log-prior density for a vector of input parameters"
-
-      lp <- unlist(mapply(unk.parameters, FUN = function(param.name) {
-        .self$parameters[[param.name]]$get.log.prior.density()
-      }))
-      #assuming priors are independent
-      lpriord <- sum(lp)
-      return(lpriord)
-    },
-
-    test.log.likelihood = function(
-      unk.parvals, unk.parameters,
-      advance.counter = FALSE){
-      "Sets the log-likelihood based on
-      the provided + current set of parameter values"
-
-      if (advance.counter) .self$set.advance.counter()
-      #setting the values of the provided parameters
-
-      if (.self$verbose) print(unk.parvals)
-
-      st <- 1
+    
+    test.fun = function(unk.parameters, unk.parvals, unk.size,
+                        derived.parameters) {
+      
+      st <- 0
       for (i in 1:length(unk.parameters)) {
-        sz <- unk.parameters[[i]]$size
-        unk.parameters[[i]]$value <- unk.parvals[
-          st:(st + sz - 1)]
+        sz <- unk.size[i]
+        val <- unk.parvals[(st + 1):(st + sz)]
         st <- st + sz
+        .self$set.value(unk.parameters[i], val)
       }
-
-      ok <- mapply(unk.parameters, FUN = function(u) {
-        .self$set.value(param.name = u$name,
-                        objs = u$value)
-        return(TRUE)
-      })
-
-      # Computing the log-likelihood
-      # NOTE: This function must be implemented by the
-      # offspring object
-      .self$set.log.likelihood()
-
-      #providing the log-likelihood to the caller
-      llik <- .self$get.log.likelihood(
-        summarized = summarized)
-      return(llik)
+      for (param.name in derived.parameters) {
+        .self$set.compute(param.name = param.name, update.timestamp = TRUE)
+      }
+      lname <- .self$config$name[.self$config$type == 'LogLikelihood']
+      .self$set.compute(param.name = lname, update.timestamp = TRUE)
+      if (.self$use.mle) {
+        res <- .self$get.log.likelihood()
+      } else {
+        res <- .self$get.log.prior.density(unk.parameters) +
+          .self$get.log.likelihood()
+      }
+      .self$model.counter <- .self$model.counter + 1
+      return(res)
     },
-
+    
     # ------------------------------------------------------
     # Get methods ------------------------------------------
     # ------------------------------------------------------
-
-    get.log.likelihood = function(summarized = TRUE){
+    
+    get.log.likelihood = function(){
       "Returns the log likelihood for a parameter vector"
-
-      L <- .self$parameters$get.data(long.name = 'log-likelihood')
-      out <- if (summarized) sum(unlist(L$llik)) else L$llik
+      
+      id <- which(.self$config$type == 'LogLikelihood')
+      if (length(id) != 1) stop('One parameter must be of type LogLikelihood')
+      out <- .self$parameters[[id]]$value
       return(out)
     },
-
+    
     get.value = function(param.name){
       "Shortcut function to retrieve a parameter value"
-
+      
       .self$get.data(param.name, field = 'value')
     },
-
+    
     get.data = function(param.name, field.name = "value") {
       "Retrieve parameter data"
-
+      
       stopifnot(.self$is.parameter(param.name))
       pstring <- paste0('.self$parameters$', param.name, '$', field.name)
       out <- eval(parse(text = pstring))
