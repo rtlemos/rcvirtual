@@ -56,12 +56,15 @@ TruncatedNormal <- setRefClass(
       return(out)
     },
 
-    rnd = function() {
-      bad <- TRUE
-      while (bad) {
-        out <- rnorm(1, mean = .self$mean, sd = sqrt(.self$var))
-        bad <- (out < .self$lb | out > .self$ub)
-      }
+    rnd = function(n = 1) {
+      out <- mapply(1:n, FUN = function(i) {
+        bad <- TRUE
+        while (bad) {
+          res <- rnorm(1, mean = .self$mean, sd = sqrt(.self$var))
+          bad <- (res < .self$lb | res > .self$ub)
+        }
+        return(res)
+      })
       return(out)
     }
 

@@ -48,8 +48,8 @@ Normal <- setRefClass(
       dnorm(x = quantile, mean = .self$mean, sd = sqrt(.self$var), log = log)
     },
 
-    rnd = function() {
-      rnorm(1, mean = .self$mean, sd = sqrt(.self$var))
+    rnd = function(n = 1) {
+      rnorm(n, mean = .self$mean, sd = sqrt(.self$var))
     }
 
   )

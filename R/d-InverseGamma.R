@@ -41,8 +41,8 @@ InverseGamma <- setRefClass(
       return(out)
     },
 
-    rnd = function() {
-      1 / rgamma(1, rate = .self$rate, shape = .self$shape)
+    rnd = function(n = 1) {
+      1 / rgamma(n, rate = .self$rate, shape = .self$shape)
     }
   )
 )

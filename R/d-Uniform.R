@@ -32,8 +32,8 @@ Uniform <- setRefClass(
       return(out)
     },
 
-    rnd = function() {
-      runif(1, min = .self$lb, max = .self$ub)
+    rnd = function(n = 1) {
+      runif(n, min = .self$lb, max = .self$ub)
     }
   )
 )
